@@ -10,7 +10,8 @@ class Settings(BaseSettings):
 
     # Database (환경별로 .env에서 분리)
     DATABASE_URL: str = "sqlite+aiosqlite:///./malbeot.db"
-
+    USE_REDIS: bool = False  # 로컬은 False, EC2는 True
+    
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
 

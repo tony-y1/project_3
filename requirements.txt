@@ -7,7 +7,7 @@ python-multipart==0.0.12
 sqlalchemy==2.0.36
 alembic==1.14.0
 aiosqlite==0.20.0      # 로컬 개발용 (SQLite)
-asyncpg==0.30.0        # 프로덕션 배포용 (PostgreSQL)
+#asyncpg==0.30.0        # 프로덕션 배포용 (PostgreSQL)
 
 # Auth / JWT
 python-jose[cryptography]==3.3.0
