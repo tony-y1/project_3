@@ -4,7 +4,7 @@
 git clone https://github.com/solrimna/malbeot-diary.git
 
 2. 환경변수 세팅
-cp .env.example .env
+copy .env.example .env
 
 3. 의존성 설치
 - pip install uv
