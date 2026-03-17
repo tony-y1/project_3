@@ -1,3 +1,4 @@
+import logging
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
@@ -28,3 +29,8 @@ async def health_check():
 
 # / (루트 경로)를 프론트엔드가 다 먹어버려 오류발생해 수정
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s"
+)
