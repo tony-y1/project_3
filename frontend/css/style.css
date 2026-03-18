@@ -1,0 +1,562 @@
+:root {
+    --bg-color: #561C24;
+    --nav-bg: #6D2932;
+    --line-color: #C7B7A3;
+    --card-color: #E8D8C4;
+    --text-color: #561C24;
+}
+
+.page-index {
+    font-family: "Petit Formal Script", cursive;
+    background-color: var(--bg-color);
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.page-login {
+    background-color: var(--bg-color);
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.font-script {
+    font-family: "Petit Formal Script", cursive;
+}
+
+.font-kr {
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+@keyframes slideUpFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(80px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes expandLine {
+    0% {
+        transform: scaleX(0);
+        opacity: 0;
+    }
+    100% {
+        transform: scaleX(1);
+        opacity: 1;
+    }
+}
+
+@keyframes textReveal {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-card {
+    animation: slideUpFadeIn 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.animate-line-top {
+    animation: expandLine 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation-delay: 0.3s;
+    transform-origin: center;
+    opacity: 0;
+}
+
+.animate-text-1 {
+    animation: textReveal 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation-delay: 0.6s;
+    opacity: 0;
+}
+
+.animate-text-2 {
+    animation: textReveal 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation-delay: 0.8s;
+    opacity: 0;
+}
+
+.animate-line-bottom {
+    animation: expandLine 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation-delay: 1s;
+    transform-origin: center;
+    opacity: 0;
+}
+
+.animate-fade {
+    animation: fadeIn 0.8s ease-out forwards;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--bg-color);
+    box-shadow: 0 0 0 2px rgba(86, 28, 36, 0.1);
+}
+
+.hidden-form {
+    display: none;
+}
+
+.page-persona {
+    background:
+        radial-gradient(circle at top, rgba(232, 216, 196, 0.12), transparent 30%),
+        linear-gradient(180deg, #561C24 0%, #6D2932 100%);
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+.persona-glass {
+    background: linear-gradient(180deg, rgba(232, 216, 196, 0.98) 0%, rgba(231, 220, 201, 0.95) 100%);
+    border: 1px solid rgba(199, 183, 163, 0.55);
+    backdrop-filter: blur(10px);
+}
+
+.persona-panel {
+    background: linear-gradient(180deg, rgba(109, 41, 50, 0.96) 0%, rgba(86, 28, 36, 0.98) 100%);
+    border: 1px solid rgba(199, 183, 163, 0.22);
+    backdrop-filter: blur(10px);
+}
+
+.persona-label {
+    display: block;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    color: rgba(86, 28, 36, 0.8);
+}
+
+.persona-input,
+.persona-textarea {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.22);
+    border: 1px solid rgba(199, 183, 163, 0.9);
+    border-radius: 18px;
+    padding: 16px 18px;
+    font-size: 14px;
+    color: #561C24;
+    transition: all 0.25s ease;
+}
+
+.persona-input::placeholder,
+.persona-textarea::placeholder {
+    color: rgba(86, 28, 36, 0.45);
+}
+
+.persona-textarea {
+    min-height: 130px;
+    resize: vertical;
+}
+
+.persona-input:focus,
+.persona-textarea:focus {
+    outline: none;
+    border-color: #6D2932;
+    box-shadow: 0 0 0 3px rgba(86, 28, 36, 0.08);
+    background: rgba(255, 255, 255, 0.34);
+}
+
+.persona-card {
+    background: linear-gradient(180deg, rgba(232, 216, 196, 0.96) 0%, rgba(199, 183, 163, 0.94) 100%);
+    border: 1px solid rgba(232, 216, 196, 0.28);
+    border-radius: 24px;
+    padding: 20px;
+    color: #561C24;
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.14);
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+.persona-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.persona-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background-color: #561C24;
+    color: #E8D8C4;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.persona-card-title {
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 4px;
+}
+
+.persona-card-summary {
+    font-size: 14px;
+    opacity: 0.82;
+    line-height: 1.6;
+    margin-bottom: 14px;
+}
+
+.persona-meta {
+    display: grid;
+    gap: 10px;
+}
+
+.persona-meta-item {
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 16px;
+    padding: 12px 14px;
+}
+
+.persona-meta-label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-bottom: 6px;
+}
+
+.persona-meta-value {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.persona-empty {
+    border: 1px dashed rgba(232, 216, 196, 0.35);
+    border-radius: 24px;
+    padding: 32px 20px;
+    text-align: center;
+    color: rgba(232, 216, 196, 0.72);
+    line-height: 1.8;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.persona-delete-btn {
+    border: none;
+    background: transparent;
+    color: rgba(86, 28, 36, 0.75);
+    font-size: 13px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.persona-delete-btn:hover {
+    opacity: 0.6;
+}
+
+.page-diary {
+    background:
+        radial-gradient(circle at top, rgba(232, 216, 196, 0.1), transparent 28%),
+        linear-gradient(180deg, #561C24 0%, #6D2932 100%);
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+.diary-top-panel {
+    background: linear-gradient(180deg, rgba(232, 216, 196, 0.98) 0%, rgba(231, 220, 201, 0.95) 100%);
+    border: 1px solid rgba(199, 183, 163, 0.5);
+    backdrop-filter: blur(10px);
+}
+
+.diary-main-btn,
+.diary-sub-btn,
+.diary-cancel-btn {
+    border: none;
+    border-radius: 999px;
+    padding: 15px 28px;
+    font-size: 13px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    transition: all 0.25s ease;
+    cursor: pointer;
+}
+
+.diary-main-btn {
+    background-color: #561C24;
+    color: #E8D8C4;
+}
+
+.diary-sub-btn {
+    background-color: #E8D8C4;
+    color: #561C24;
+    border: 1px solid rgba(86, 28, 36, 0.18);
+}
+
+.diary-sub-btn:hover {
+    background-color: #f1e6d8;
+    color: #561C24;
+    transform: translateY(-1px);
+    opacity: 1;
+}
+.diary-cancel-btn {
+    background-color: transparent;
+    color: #561C24;
+    border: 1px solid rgba(86, 28, 36, 0.22);
+}
+
+.diary-main-btn:hover,
+.diary-sub-btn:hover,
+.diary-cancel-btn:hover {
+    transform: translateY(-1px);
+    opacity: 0.92;
+}
+
+.diary-nav-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 999px;
+    border: 1px solid rgba(232, 216, 196, 0.25);
+    background: rgba(255, 255, 255, 0.06);
+    color: #E8D8C4;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.diary-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-1px);
+}
+
+.diary-shelf-wrapper {
+    width: 100%;
+    overflow: hidden;
+    padding: 30px 0 10px;
+    position: relative;
+}
+
+.diary-shelf-track {
+    display: flex;
+    align-items: flex-end;
+    gap: 26px;
+    min-height: 430px;
+    transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+    will-change: transform;
+}
+
+.diary-book {
+    width: 260px;
+    min-width: 260px;
+    height: 360px;
+    border-radius: 28px;
+    padding: 24px 22px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(180deg, #E8D8C4 0%, #d7c8b4 100%);
+    box-shadow:
+        0 25px 45px rgba(0, 0, 0, 0.24),
+        inset -12px 0 20px rgba(86, 28, 36, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    border: 1px solid rgba(199, 183, 163, 0.65);
+    transform: perspective(1000px) rotateY(-9deg);
+    transition: transform 0.3s ease;
+}
+
+.diary-book:hover {
+    transform: perspective(1000px) rotateY(-4deg) translateY(-8px);
+}
+
+.diary-book::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 16px;
+    width: 10px;
+    height: 100%;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #6D2932 0%, #561C24 100%);
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.12);
+}
+
+.diary-book::after {
+    content: "";
+    position: absolute;
+    right: -18px;
+    top: 24px;
+    width: 36px;
+    height: calc(100% - 48px);
+    background: rgba(255, 255, 255, 0.12);
+    filter: blur(10px);
+    border-radius: 50%;
+}
+
+.diary-book-inner {
+    padding-left: 18px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.diary-book-date {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(86, 28, 36, 0.72);
+    margin-bottom: 18px;
+}
+
+.diary-book-title {
+    font-size: 28px;
+    line-height: 1.35;
+    font-weight: 600;
+    color: #561C24;
+    margin-bottom: 16px;
+    word-break: keep-all;
+}
+
+.diary-book-preview {
+    font-size: 14px;
+    line-height: 1.8;
+    color: rgba(86, 28, 36, 0.82);
+    max-height: calc(1.8em * 7);
+    overflow: hidden;
+}
+
+.diary-book-footer {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.diary-book-badge {
+    display: inline-block;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: #561C24;
+    color: #E8D8C4;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.diary-book-delete {
+    border: none;
+    background: transparent;
+    color: rgba(86, 28, 36, 0.72);
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.diary-empty-book {
+    width: 280px;
+    min-width: 280px;
+    height: 360px;
+    border-radius: 28px;
+    border: 1px dashed rgba(232, 216, 196, 0.38);
+    color: rgba(232, 216, 196, 0.72);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.9;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 20px;
+}
+
+.diary-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.diary-modal.hidden {
+    display: none;
+}
+
+.diary-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(20, 10, 12, 0.58);
+    backdrop-filter: blur(6px);
+}
+
+.diary-modal-card {
+    position: relative;
+    z-index: 2;
+    width: min(100%, 760px);
+    background: linear-gradient(180deg, rgba(232, 216, 196, 0.98) 0%, rgba(231, 220, 201, 0.96) 100%);
+    border: 1px solid rgba(199, 183, 163, 0.55);
+    border-radius: 30px;
+    padding: 28px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.28);
+    animation: fadeIn 0.25s ease-out forwards;
+}
+
+.diary-close-btn {
+    border: none;
+    background: rgba(86, 28, 36, 0.08);
+    color: #561C24;
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.diary-content-textarea {
+    min-height: 220px;
+}
+
+.diary-search-textarea {
+    min-height: 150px;
+}
+
+.diary-search-result {
+    margin-top: 6px;
+    border-radius: 20px;
+    padding: 18px;
+    background: rgba(255, 255, 255, 0.35);
+    color: rgba(86, 28, 36, 0.78);
+    line-height: 1.8;
+    min-height: 76px;
+}
+
+@media (max-width: 768px) {
+    .diary-book {
+        width: 220px;
+        min-width: 220px;
+        height: 320px;
+    }
+
+    .diary-book-title {
+        font-size: 22px;
+    }
+
+    .diary-shelf-track {
+        min-height: 380px;
+        gap: 20px;
+    }
+}

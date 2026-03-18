@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Write Down Your Day</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Petit Formal Script -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Petit+Formal+Script&display=swap" rel="stylesheet">
+
+    <!-- 외부 CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page-login min-h-screen flex items-center justify-center relative font-kr">
+
+    <a href="index.html" class="absolute top-8 left-8 text-[#E8D8C4] flex items-center gap-2 hover:opacity-70 transition-opacity z-50">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span class="tracking-widest text-sm uppercase">Back to Home</span>
+    </a>
+
+    <div class="w-[90vw] max-w-md bg-[#E8D8C4] p-10 sm:p-12 shadow-2xl rounded-sm animate-fade">
+        
+        <div class="text-center mb-10">
+            <h2 class="font-script text-4xl mb-2" style="color: var(--text-color);">Welcome</h2>
+            <div class="w-12 h-[1px] mx-auto opacity-50" style="background-color: var(--bg-color);"></div>
+        </div>
+
+        <div id="login-form">
+            <h3 class="text-xl font-medium mb-8 text-center tracking-tight" style="color: var(--text-color);">로그인</h3>
+            <form class="space-y-6">
+                <div>
+                    <label class="block text-xs uppercase tracking-widest mb-2 opacity-70" style="color: var(--text-color);">ID</label>
+                    <input type="email" class="w-full bg-transparent border-b border-[#C7B7A3] py-2 px-1 text-sm transition-all focus:border-[#561C24]" placeholder="아이디를 입력하세요">
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-widest mb-2 opacity-70" style="color: var(--text-color);">Password</label>
+                    <input type="password" class="w-full bg-transparent border-b border-[#C7B7A3] py-2 px-1 text-sm transition-all focus:border-[#561C24]" placeholder="비밀번호를 입력하세요">
+                </div>
+                <button type="button" class="w-full py-4 mt-4 text-[#E8D8C4] text-sm tracking-[0.2em] uppercase font-medium hover:opacity-90 transition-opacity" style="background-color: var(--bg-color);">
+                    Sign In
+                </button>
+            </form>
+            <p class="text-center mt-8 text-xs opacity-60" style="color: var(--text-color);">
+                계정이 없으신가요? 
+                <button onclick="toggleForm('signup')" class="underline hover:opacity-100 font-bold ml-1">회원가입</button>
+            </p>
+        </div>
+
+        <div id="signup-form" class="hidden-form">
+            <h3 class="text-xl font-medium mb-8 text-center tracking-tight" style="color: var(--text-color);">회원가입</h3>
+            <form class="space-y-6">
+                <div>
+                    <label class="block text-xs uppercase tracking-widest mb-2 opacity-70" style="color: var(--text-color);">Name</label>
+                    <input type="text" class="w-full bg-transparent border-b border-[#C7B7A3] py-2 px-1 text-sm transition-all focus:border-[#561C24]" placeholder="이름을 입력하세요">
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-widest mb-2 opacity-70" style="color: var(--text-color);">Email</label>
+                    <input type="email" class="w-full bg-transparent border-b border-[#C7B7A3] py-2 px-1 text-sm transition-all focus:border-[#561C24]" placeholder="이메일을 입력하세요">
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-widest mb-2 opacity-70" style="color: var(--text-color);">Password</label>
+                    <input type="password" class="w-full bg-transparent border-b border-[#C7B7A3] py-2 px-1 text-sm transition-all focus:border-[#561C24]" placeholder="비밀번호를 입력하세요">
+                </div>
+                <button type="button" class="w-full py-4 mt-4 text-[#E8D8C4] text-sm tracking-[0.2em] uppercase font-medium hover:opacity-90 transition-opacity" style="background-color: var(--bg-color);">
+                    Join Us
+                </button>
+            </form>
+            <p class="text-center mt-8 text-xs opacity-60" style="color: var(--text-color);">
+                이미 계정이 있으신가요? 
+                <button onclick="toggleForm('login')" class="underline hover:opacity-100 font-bold ml-1">로그인</button>
+            </p>
+        </div>
+
+    </div>
+
+    <!-- 외부 JS -->
+    <script src="js/frontend.js"></script>
+</body>
+</html>

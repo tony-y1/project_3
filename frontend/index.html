@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>"하루" commit()</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Petit Formal Script -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Petit+Formal+Script&display=swap" rel="stylesheet">
+
+    <!-- 외부 CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page-index min-h-screen flex items-center justify-center relative">
+
+    <div class="absolute top-0 left-0 w-full h-16 z-30 peer"></div>
+
+    <nav class="absolute top-0 left-0 w-full text-[#E8D8C4] shadow-2xl z-40 transform -translate-y-full transition-transform duration-500 ease-in-out peer-hover:translate-y-0 hover:translate-y-0 border-b border-[#C7B7A3]/20" style="background-color: var(--nav-bg);">
+        <div class="w-full max-w-7xl mx-auto flex justify-between items-center px-8 md:px-16 py-6 font-kr">
+            <a href="login.html" class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300">로그인/회원가입</a>
+            <a href="my-diary.html" class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300">나의 일기장</a>
+            <a href="ai-persona.html" class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300">AI 페르소나 관리</a>
+        </div>
+    </nav>
+
+    <div class="w-[85vw] max-w-7xl h-[70vh] min-h-[500px] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center p-8 sm:p-12 lg:p-16 animate-card rounded-sm" style="background-color: var(--card-color);">
+        <div class="w-full flex flex-col items-center justify-center relative">
+            <div class="w-[80%] md:w-[70%] max-w-[800px] h-[1px] mb-10 sm:mb-14 lg:mb-20 animate-line-top" style="background-color: var(--line-color);"></div>
+            <div class="text-center flex flex-col items-center gap-2 sm:gap-4 lg:gap-6" style="color: var(--text-color);">
+                <h1 class="text-5xl sm:text-6xl md:text-7xl lg:text-[7rem] xl:text-[8.5rem] leading-[1.2] animate-text-1 whitespace-nowrap">
+                    Write down
+                </h1>
+                <h1 class="text-5xl sm:text-6xl md:text-7xl lg:text-[7rem] xl:text-[8.5rem] leading-[1.2] animate-text-2 whitespace-nowrap">
+                    your day
+                </h1>
+            </div>
+            <div class="w-[80%] md:w-[70%] max-w-[800px] h-[1px] mt-10 sm:mt-14 lg:mt-20 animate-line-bottom" style="background-color: var(--line-color);"></div>
+        </div>
+    </div>
+
+    <!-- 외부 JS -->
+    <script src="js/frontend.js"></script>
+</body>
+</html>
