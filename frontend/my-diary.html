@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나의 일기장 - "하루" commit()</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Petit+Formal+Script&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page-diary min-h-screen relative font-kr">
+
+    <a href="index.html" class="absolute top-8 left-8 text-[#E8D8C4] flex items-center gap-2 hover:opacity-70 transition-opacity z-50">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span class="tracking-widest text-sm uppercase">Back to Home</span>
+    </a>
+
+    <main class="min-h-screen px-6 py-24 md:px-10 lg:px-16 overflow-hidden">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-12">
+                <p class="font-script text-2xl md:text-3xl text-[#E8D8C4]/85 mb-4">My diary archive</p>
+                <h1 class="text-3xl md:text-5xl tracking-tight text-[#E8D8C4] font-semibold mb-4">
+                    나의 일기장
+                </h1>
+                <div class="w-24 h-[1px] mx-auto bg-[#C7B7A3]/70"></div>
+                <p class="text-[#E8D8C4]/75 text-sm md:text-base mt-6 max-w-3xl mx-auto leading-relaxed">
+                    하루를 기록하면 한 권의 책으로 쌓이고, 기억이 흐릿한 날은 AI 검색으로 다시 찾아볼 수 있어요.
+                </p>
+            </div>
+
+            <section class="diary-top-panel rounded-[30px] p-6 md:p-8 shadow-2xl mb-10">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                    <div>
+                        <p class="font-script text-xl text-[#561C24]/80 mb-1">Archive your day</p>
+                        <h2 class="text-2xl md:text-3xl font-semibold text-[#561C24] mb-3">오늘의 하루를 책으로 남겨보세요</h2>
+                        <p class="text-[#561C24]/75 leading-relaxed text-sm md:text-base max-w-2xl">
+                            일기를 작성하면 날짜와 제목이 담긴 한 권의 책으로 저장돼요.
+                            오른쪽으로 넘기며 지나온 하루들을 한눈에 볼 수 있어요.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button type="button" onclick="openDiaryModal()" class="diary-main-btn">
+                            일기 작성하기
+                        </button>
+                        <button type="button" onclick="openSearchModal()" class="diary-sub-btn">
+                            AI로 기억 찾기
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="relative">
+                <div class="flex items-center justify-between mb-5 px-1">
+                    <div>
+                        <p class="text-[#E8D8C4]/70 text-sm tracking-[0.18em] uppercase mb-1">My Bookshelf</p>
+                        <h3 class="text-[#E8D8C4] text-2xl md:text-3xl font-semibold">기록된 일기 책장</h3>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button type="button" class="diary-nav-btn" onclick="moveDiaryShelf(-1)">‹</button>
+                        <button type="button" class="diary-nav-btn" onclick="moveDiaryShelf(1)">›</button>
+                    </div>
+                </div>
+
+                <div class="diary-shelf-wrapper">
+                    <div id="diary-shelf" class="diary-shelf-track">
+                        <div class="diary-empty-book" id="diary-empty-state">
+                            아직 저장된 일기가 없어요.<br>
+                            첫 번째 하루를 책으로 만들어보세요.
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- 일기 작성 모달 -->
+    <div id="diary-modal" class="diary-modal hidden">
+        <div class="diary-modal-backdrop" onclick="closeDiaryModal()"></div>
+        <div class="diary-modal-card">
+            <div class="flex items-start justify-between gap-4 mb-8">
+                <div>
+                    <p class="font-script text-xl text-[#561C24]/80 mb-1">Write your day</p>
+                    <h2 class="text-2xl md:text-3xl font-semibold text-[#561C24]">새 일기 작성</h2>
+                </div>
+                <button type="button" class="diary-close-btn" onclick="closeDiaryModal()">✕</button>
+            </div>
+
+            <form class="space-y-5">
+                <div>
+                    <label class="persona-label">날짜</label>
+                    <input id="diary-date" type="date" class="persona-input">
+                </div>
+
+                <div>
+                    <label class="persona-label">제목</label>
+                    <input id="diary-title" type="text" class="persona-input" placeholder="예: 비 오는 날의 산책">
+                </div>
+
+                <div>
+                    <label class="persona-label">오늘의 일기</label>
+                    <textarea id="diary-content" class="persona-textarea diary-content-textarea" placeholder="오늘 있었던 일을 자유롭게 적어보세요."></textarea>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                    <button type="button" onclick="saveDiaryEntry()" class="diary-main-btn w-full sm:w-auto">
+                        책으로 저장하기
+                    </button>
+                    <button type="button" onclick="closeDiaryModal()" class="diary-cancel-btn w-full sm:w-auto">
+                        닫기
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- AI 검색 모달 -->
+    <div id="search-modal" class="diary-modal hidden">
+        <div class="diary-modal-backdrop" onclick="closeSearchModal()"></div>
+        <div class="diary-modal-card">
+            <div class="flex items-start justify-between gap-4 mb-8">
+                <div>
+                    <p class="font-script text-xl text-[#561C24]/80 mb-1">AI memory search</p>
+                    <h2 class="text-2xl md:text-3xl font-semibold text-[#561C24]">AI로 기억 찾기</h2>
+                </div>
+                <button type="button" class="diary-close-btn" onclick="closeSearchModal()">✕</button>
+            </div>
+
+            <div class="space-y-5">
+                <div>
+                    <label class="persona-label">찾고 싶은 기억</label>
+                    <textarea id="diary-search-input" class="persona-textarea diary-search-textarea" placeholder="예: 친구랑 카페 갔던 날, 비슷한 내용의 일기 찾아줘"></textarea>
+                </div>
+
+                <button type="button" onclick="fakeDiarySearch()" class="diary-main-btn w-full sm:w-auto">
+                    검색하기
+                </button>
+
+                <div id="diary-search-result" class="diary-search-result">
+                    아직 검색한 내용이 없어요.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/frontend.js"></script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 페르소나 관리 - "하루" commit()</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Petit+Formal+Script&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page-persona min-h-screen relative font-kr">
+
+    <a href="index.html" class="absolute top-8 left-8 text-[#E8D8C4] flex items-center gap-2 hover:opacity-70 transition-opacity z-50">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span class="tracking-widest text-sm uppercase">Back to Home</span>
+    </a>
+
+    <main class="min-h-screen px-6 py-24 md:px-10 lg:px-16">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-14">
+                <p class="font-script text-2xl md:text-3xl text-[#E8D8C4]/85 mb-4">AI Persona Studio</p>
+                <h1 class="text-3xl md:text-5xl tracking-tight text-[#E8D8C4] font-semibold mb-4">
+                    AI 페르소나 관리
+                </h1>
+                <div class="w-24 h-[1px] mx-auto bg-[#C7B7A3]/70"></div>
+                <p class="text-[#E8D8C4]/75 text-sm md:text-base mt-6 max-w-2xl mx-auto leading-relaxed">
+                    일기에 반응해주는 AI의 말투와 성격을 직접 설정해보세요.
+                    다정한 선생님, 친한 친구, 차분한 상담가처럼 원하는 분위기의 페르소나를 만들고 관리할 수 있어요.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-[1.1fr_0.9fr] gap-8">
+                <!-- 작성 카드 -->
+                <section class="persona-glass rounded-[32px] p-7 md:p-10 shadow-2xl">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <p class="font-script text-xl text-[#561C24]/80 mb-1">Create persona</p>
+                            <h2 class="text-2xl md:text-3xl font-semibold text-[#561C24]">새 페르소나 만들기</h2>
+                        </div>
+                        <div class="hidden md:flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-[#561C24] opacity-90"></span>
+                            <span class="w-3 h-3 rounded-full bg-[#6D2932] opacity-80"></span>
+                            <span class="w-3 h-3 rounded-full bg-[#C7B7A3] opacity-90"></span>
+                        </div>
+                    </div>
+
+                    <form id="persona-form" class="space-y-6">
+                        <div>
+                            <label class="persona-label">페르소나 이름</label>
+                            <input
+                                id="persona-name"
+                                type="text"
+                                class="persona-input"
+                                placeholder="예: 다정한 담임선생님"
+                            >
+                        </div>
+
+                        <div>
+                            <label class="persona-label">한 줄 소개</label>
+                            <input
+                                id="persona-summary"
+                                type="text"
+                                class="persona-input"
+                                placeholder="예: 하루를 따뜻하게 정리해주는 선생님 같은 AI"
+                            >
+                        </div>
+
+                        <div>
+                            <label class="persona-label">말투 / 분위기</label>
+                            <input
+                                id="persona-tone"
+                                type="text"
+                                class="persona-input"
+                                placeholder="예: 차분하고 따뜻한 말투, 부드럽게 칭찬해주기"
+                            >
+                        </div>
+
+                        <div>
+                            <label class="persona-label">AI 반응 스타일</label>
+                            <textarea
+                                id="persona-style"
+                                class="persona-textarea"
+                                placeholder="예: 일기 내용을 짧게 정리한 뒤, 오늘의 감정을 공감하고 마지막에 따뜻한 한마디를 남겨줘."
+                            ></textarea>
+                        </div>
+
+                        <div>
+                            <label class="persona-label">자주 쓰는 표현</label>
+                            <textarea
+                                id="persona-expression"
+                                class="persona-textarea"
+                                placeholder="예: 오늘도 정말 수고했어요. / 네 마음이 잘 전해졌어요. / 내일은 더 가볍게 시작해봐요."
+                            ></textarea>
+                        </div>
+
+                        <div class="pt-2">
+                            <button
+                                type="button"
+                                onclick="addPersona()"
+                                class="w-full md:w-auto px-8 py-4 rounded-full text-[#E8D8C4] tracking-[0.18em] uppercase text-sm font-medium transition-all hover:opacity-90 hover:-translate-y-[1px]"
+                                style="background-color: var(--bg-color);"
+                            >
+                                Save Persona
+                            </button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- 목록 카드 -->
+                <section class="persona-panel rounded-[32px] p-7 md:p-10 shadow-2xl">
+                    <div class="mb-8">
+                        <p class="font-script text-xl text-[#E8D8C4]/85 mb-1">My personas</p>
+                        <h2 class="text-2xl md:text-3xl font-semibold text-[#E8D8C4]">페르소나 목록</h2>
+                        <p class="text-[#E8D8C4]/70 text-sm mt-3 leading-relaxed">
+                            저장한 페르소나를 확인하고, 반응 컨셉을 한눈에 비교할 수 있어요.
+                        </p>
+                    </div>
+
+                    <div id="persona-list" class="space-y-4">
+                        <div class="persona-empty">
+                            아직 만든 페르소나가 없어요.<br>
+                            왼쪽에서 첫 번째 페르소나를 만들어보세요.
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/frontend.js"></script>
+</body>
+</html>

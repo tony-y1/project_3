@@ -12,55 +12,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Petit+Formal+Script&display=swap" rel="stylesheet">
-    
-    <style>
-        :root {
-            --bg-color: #561C24;    
-            --nav-bg: #6D2932;      
-            --line-color: #C7B7A3;  
-            --card-color: #E8D8C4;  
-            --text-color: #561C24;  
-        }
 
-        body {
-            background-color: var(--bg-color);
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-        }
-
-        .font-script {
-            font-family: "Petit Formal Script", cursive;
-        }
-
-        .font-kr {
-            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .animate-fade {
-            animation: fadeIn 0.8s ease-out forwards;
-        }
-
-        /* 입력창 포커스 스타일 */
-        input:focus {
-            outline: none;
-            border-color: var(--bg-color);
-            box-shadow: 0 0 0 2px rgba(86, 28, 36, 0.1);
-        }
-
-        .hidden-form {
-            display: none;
-        }
-    </style>
+    <!-- 외부 CSS -->
+    <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="min-h-screen flex items-center justify-center relative font-kr">
+<body class="page-login min-h-screen flex items-center justify-center relative font-kr">
 
-    <!-- 홈으로 돌아가기 버튼 -->
     <a href="index.html" class="absolute top-8 left-8 text-[#E8D8C4] flex items-center gap-2 hover:opacity-70 transition-opacity z-50">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -68,16 +25,13 @@
         <span class="tracking-widest text-sm uppercase">Back to Home</span>
     </a>
 
-    <!-- 로그인/회원가입 카드 -->
     <div class="w-[90vw] max-w-md bg-[#E8D8C4] p-10 sm:p-12 shadow-2xl rounded-sm animate-fade">
         
-        <!-- 헤더 로고 느낌 -->
         <div class="text-center mb-10">
             <h2 class="font-script text-4xl mb-2" style="color: var(--text-color);">Welcome</h2>
             <div class="w-12 h-[1px] mx-auto opacity-50" style="background-color: var(--bg-color);"></div>
         </div>
 
-        <!-- 로그인 폼 -->
         <div id="login-form">
             <h3 class="text-xl font-medium mb-8 text-center tracking-tight" style="color: var(--text-color);">로그인</h3>
             <form class="space-y-6">
@@ -99,7 +53,6 @@
             </p>
         </div>
 
-        <!-- 회원가입 폼 -->
         <div id="signup-form" class="hidden-form">
             <h3 class="text-xl font-medium mb-8 text-center tracking-tight" style="color: var(--text-color);">회원가입</h3>
             <form class="space-y-6">
@@ -127,19 +80,7 @@
 
     </div>
 
-    <script>
-        function toggleForm(type) {
-            const loginForm = document.getElementById('login-form');
-            const signupForm = document.getElementById('signup-form');
-            
-            if (type === 'signup') {
-                loginForm.classList.add('hidden-form');
-                signupForm.classList.remove('hidden-form');
-            } else {
-                signupForm.classList.add('hidden-form');
-                loginForm.classList.remove('hidden-form');
-            }
-        }
-    </script>
+    <!-- 외부 JS -->
+    <script src="js/frontend.js"></script>
 </body>
 </html>
