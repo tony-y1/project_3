@@ -94,7 +94,7 @@
 
         .diary-meta-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 16px;
         }
 
@@ -140,6 +140,7 @@
             padding: 22px;
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(232, 216, 196, 0.12);
+            min-height: 210px;
         }
 
         .ai-preview-title {
@@ -152,7 +153,7 @@
         }
 
         .ai-preview-body {
-            color: rgba(232, 216, 196, 0.88);
+            color: rgba(232, 216, 196, 0.6);
             line-height: 1.9;
             font-size: 14px;
         }
@@ -160,6 +161,10 @@
         @media (max-width: 1024px) {
             .diary-detail-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .diary-meta-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
 
@@ -197,7 +202,7 @@
                 </h1>
                 <div class="w-24 h-[1px] mx-auto bg-[#C7B7A3]/70 mb-5"></div>
                 <p class="text-[#E8D8C4] text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
-                    오늘 있었던 일과 감정을 자유롭게 적어보세요. 나중에는 AI가 이 내용을 정리하고, 페르소나에 맞는 따뜻한 반응을 남겨줄 수 있어요.
+                    오늘 있었던 일과 감정을 자유롭게 적어보세요. AI가 일기를 정리하고, 선택한 페르소나에 맞는 말투로 반응해줄 수 있어요.
                 </p>
             </div>
 
@@ -246,6 +251,17 @@
                                     <option>바람</option>
                                 </select>
                             </div>
+
+                            <div>
+                                <label class="diary-detail-label">페르소나</label>
+                                <select class="diary-detail-select">
+                                    <option>선택하기</option>
+                                    <option>다정한 담임선생님</option>
+                                    <option>친한 친구</option>
+                                    <option>차분한 상담가</option>
+                                    <option>따뜻한 언니</option>
+                                </select>
+                            </div>
                         </div>
 
                         <div>
@@ -267,10 +283,10 @@
 
                 <aside class="diary-detail-side">
                     <div class="mb-8">
-                        <p class="font-script text-xl text-[#E8D8C4]/85 mb-1">AI preview</p>
-                        <h2 class="text-2xl md:text-3xl font-semibold text-[#E8D8C4]">AI 반응 미리보기</h2>
-                        <p class="text-[#E8D8C4]/72 text-sm mt-3 leading-relaxed">
-                            여기에는 나중에 AI가 일기를 정리한 내용과 페르소나에 맞는 반응이 표시될 수 있어요.
+                        <p class="font-script text-xl text-[#E8D8C4] mb-1">AI preview</p>
+                        <h2 class="text-2xl md:text-3xl font-semibold text-[#E8D8C4]">AI 리뷰</h2>
+                        <p class="text-[#E8D8C4] text-sm mt-3 leading-relaxed">
+                            일기를 작성하면 AI가 내용을 간단히 정리하고, 어색한 표현을 다듬은 뒤 선택한 페르소나에 맞게 반응해주는 영역이에요.
                         </p>
                     </div>
 
@@ -278,23 +294,12 @@
                         <div class="ai-preview-card">
                             <div class="ai-preview-title">AI 요약</div>
                             <div class="ai-preview-body">
-                                오늘 하루의 핵심 내용을 짧게 정리하는 영역이에요.<br>
-                                예를 들면, “친구와 카페에서 시간을 보내며 마음이 한결 편안해진 하루”처럼 정리될 수 있어요.
                             </div>
                         </div>
 
                         <div class="ai-preview-card">
                             <div class="ai-preview-title">AI 한마디</div>
                             <div class="ai-preview-body">
-                                페르소나 설정에 따라 다정한 선생님, 친한 친구, 차분한 상담가 같은 말투로 반응이 들어갈 수 있어요.<br><br>
-                                예: “오늘 마음이 조금은 가벼워진 것 같아서 다행이에요. 이런 평온한 순간도 분명 소중한 하루의 한 장면이에요.”
-                            </div>
-                        </div>
-
-                        <div class="ai-preview-card">
-                            <div class="ai-preview-title">태그 예시</div>
-                            <div class="ai-preview-body">
-                                #친구 #카페 #비오는날 #감정정리 #편안함
                             </div>
                         </div>
                     </div>
