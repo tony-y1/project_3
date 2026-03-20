@@ -1,30 +1,34 @@
-# 담당 : A팀원 유가영
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, Field
 from datetime import datetime
 import uuid
 
 
+# ── 회원가입 요청 데이터 ──────────────────────────
 class UserCreate(BaseModel):
-    email: EmailStr
-    password: str
-    nickname: str
+    username: str = Field(min_length=3, max_length=50)
+    password: str = Field(min_length=8)
+    nickname: str = Field(min_length=1, max_length=50)
 
 
+# ── 로그인 요청 데이터 ───────────────────────────
 class UserLogin(BaseModel):
-    email: EmailStr
+    username: str
     password: str
 
 
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-
-
+# ── 유저 응답 데이터 (비밀번호 제외) ──────────────
 class UserResponse(BaseModel):
     id: uuid.UUID
-    email: str
+    username: str
     nickname: str
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+
+# ── 토큰 응답 데이터 ─────────────────────────────
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse

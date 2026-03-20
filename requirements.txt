@@ -1,17 +1,19 @@
 # Core
 fastapi==0.115.5
 uvicorn[standard]==0.32.1
+click>=8.0.0
 python-multipart==0.0.12
 
 # Database
 sqlalchemy==2.0.36
+greenlet==3.1.1
 alembic==1.14.0
 aiosqlite==0.20.0      # 로컬 개발용 (SQLite)
 #asyncpg==0.30.0        # 프로덕션 배포용 (PostgreSQL)
 
 # Auth / JWT
 python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
+bcrypt==4.2.1
 
 # Cache / Session Store
 redis==5.2.1
@@ -28,6 +30,7 @@ apscheduler==3.10.4
 
 # Env
 python-dotenv==1.0.1
+pydantic-settings==2.7.1
 
 # HTTP Client
 httpx==0.27.2
