@@ -3,17 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>"하루" commit()</title>
-    
-    <!-- Tailwind CSS -->
+    <title>Write Down Your Day</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google Fonts: Petit Formal Script -->
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Petit+Formal+Script&display=swap" rel="stylesheet">
 
-    <!-- 외부 CSS -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="page-index min-h-screen flex items-center justify-center relative">
@@ -22,7 +19,7 @@
 
     <nav class="absolute top-0 left-0 w-full text-[#E8D8C4] shadow-2xl z-40 transform -translate-y-full transition-transform duration-500 ease-in-out peer-hover:translate-y-0 hover:translate-y-0 border-b border-[#C7B7A3]/20" style="background-color: var(--nav-bg);">
         <div class="w-full max-w-7xl mx-auto flex justify-between items-center px-8 md:px-16 py-6 font-kr">
-            <a href="login.html" class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300">로그인/회원가입</a>
+            <a id="auth-link" href="login.html" class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300">로그인/회원가입</a>
             <a href="my-diary.html" class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300">나의 일기장</a>
             <a href="ai-persona.html" class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300">AI 페르소나 관리</a>
         </div>
@@ -43,7 +40,8 @@
         </div>
     </div>
 
-    <!-- 외부 JS -->
     <script src="js/frontend.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
 </body>
 </html>
