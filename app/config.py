@@ -18,8 +18,9 @@ class Settings(BaseSettings):
     # OpenAI
     OPENAI_API_KEY: str = ""
 
-    # Google Cloud STT/TTS (나 담당)
-    GOOGLE_APPLICATION_CREDENTIALS: str = "./credentials/google-service-account.json"
+    # Azure Speech
+    AZURE_SPEECH_KEY: str = ""
+    AZURE_SPEECH_REGION: str = "koreacentral" 
 
     class Config:
         env_file = ".env"
