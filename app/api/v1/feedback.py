@@ -82,13 +82,13 @@ async def create_feedback(
     feedback = await feedback_svc.create_feedback(
         db=db,
         diary_id=diary_id,
+        persona_id=diary.persona_id,
         diary_content=diary.content,
         persona_name=persona_name,
         preset_type=preset_type,
         custom_description=custom_description,
     )
-    return {"diary_id": str(diary_id), "content": feedback.content}
-
+    return {"diary_id": str(diary_id), "feedback_text": feedback.feedback_text}
 
 # ── GET /feedback/{diary_id} ─ 저장된 피드백 조회
 @router.get("/{diary_id}")
@@ -101,4 +101,4 @@ async def get_feedback(
     feedback = await feedback_svc.get_feedback(db, diary_id)
     if not feedback:
         raise HTTPException(status_code=404, detail="피드백이 없습니다. 먼저 생성해주세요.")
-    return {"diary_id": str(diary_id), "content": feedback.content}
+    return {"diary_id": str(diary_id), "feedback_text": feedback.feedback_text}
