@@ -33,7 +33,6 @@ DEFAULT_PROMPT = PERSONA_PROMPTS["empathy"]
 
 
 def build_system_prompt(persona_name: str, preset_type: str | None, custom_description: str | None) -> str:
-    """페르소나 정보로 시스템 프롬프트 생성"""
     if preset_type and preset_type in PERSONA_PROMPTS:
         base = PERSONA_PROMPTS[preset_type]
     elif custom_description:
@@ -47,7 +46,7 @@ class FeedbackService:
     def __init__(self):
         self.gpt = GPTService()
 
-    # ── 스트리밍 피드백 생성 (교수님 피드백: 반응 속도 최적화)
+    # ── 스트리밍 피드백 생성
     async def stream_feedback(
         self,
         diary_content: str,
@@ -62,11 +61,12 @@ class FeedbackService:
         ):
             yield sentence
 
-    # ── 피드백 생성 & DB 저장 (일반 저장용)
+    # ── 피드백 생성 & DB 저장
     async def create_feedback(
         self,
         db: AsyncSession,
         diary_id: uuid.UUID,
+        persona_id: uuid.UUID | None,
         diary_content: str,
         persona_name: str,
         preset_type: str | None,
@@ -78,7 +78,7 @@ class FeedbackService:
 
         system_prompt = build_system_prompt(persona_name, preset_type, custom_description)
 
-        # GPT 스트리밍 결과를 모아서 저장
+        # GPT 스트리밍 결과 모아서 저장
         full_text = ""
         async for sentence in self.gpt.stream_feedback(
             diary_content=diary_content,
@@ -86,7 +86,15 @@ class FeedbackService:
         ):
             full_text += sentence + " "
 
-        feedback = AiFeedback(diary_id=diary_id, content=full_text.strip())
+        # 페르소나 없으면 임시 UUID 사용
+        dummy_persona_id = persona_id or uuid.UUID("00000000-0000-0000-0000-000000000000")
+
+        feedback = AiFeedback(
+            diary_id=diary_id,
+            persona_id=dummy_persona_id,
+            feedback_text=full_text.strip(),
+            feedback_type=preset_type or "empathy",
+        )
         db.add(feedback)
         await db.commit()
         await db.refresh(feedback)

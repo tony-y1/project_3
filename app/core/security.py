@@ -1,11 +1,18 @@
+import uuid
 from datetime import datetime, timedelta, timezone
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
 from passlib.context import CryptContext
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.config import get_settings
-import uuid
+from app.database import get_db
 
 settings = get_settings()
-
+bearer_scheme = HTTPBearer()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
@@ -30,15 +37,6 @@ def decode_access_token(token: str) -> str | None:
         return None
 
 
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from app.database import get_db
-
-bearer_scheme = HTTPBearer()
-
-
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     db: AsyncSession = Depends(get_db),
@@ -52,7 +50,6 @@ async def get_current_user(
             detail="토큰이 유효하지 않습니다.",
         )
 
-    # 문자열 → UUID 객체 변환 (핵심 수정!)
     try:
         user_uuid = uuid.UUID(user_id)
     except (ValueError, AttributeError):
@@ -61,7 +58,6 @@ async def get_current_user(
             detail="토큰이 유효하지 않습니다.",
         )
 
-    # 순환참조 방지용 함수 내부 import
     from app.models.user import User
 
     result = await db.execute(select(User).where(User.id == user_uuid))
