@@ -21,6 +21,8 @@ class DiaryService:
             user_id=user_id,
             persona_id=data.persona_id,
             title=data.title,
+            emotion=data.emotion,
+            weather=data.weather,
             content=data.content,
             input_type=data.input_type,
             diary_date=data.diary_date,
@@ -97,6 +99,10 @@ class DiaryService:
     ) -> Diary:
         if data.title is not None:
             diary.title = data.title
+        if data.emotion is not None:
+            diary.emotion = data.emotion
+        if data.weather is not None:
+            diary.weather = data.weather
         if data.content is not None:
             diary.content = data.content
         if data.diary_date is not None:

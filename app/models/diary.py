@@ -13,6 +13,8 @@ class Diary(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
     persona_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("personas.id"), nullable=True)
     title: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    emotion: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    weather: Mapped[str | None] = mapped_column(String(100), nullable=True)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     input_type: Mapped[str] = mapped_column(String(10), nullable=False)          # text | voice | mixed
     audio_file_url: Mapped[str | None] = mapped_column(String(500), nullable=True)

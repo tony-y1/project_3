@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>"하루" commit()</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 기본 여백 제거 및 스크롤 방지 */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #050511; /* 배경 로딩 전 기본 색상 */
+        }
+
+        /* 유니콘 스튜디오 배경을 전체 화면으로 설정 */
+        #us-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1; /* 가장 뒤로 보내기 */
+        }
+
+        /* 헤더 컨텐츠를 배경 위로 올리기 */
+        header {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 유니콘 스튜디오 하단 워터마크/로고 강제 숨김 처리 */
+        a[href*="unicorn.studio"],
+        a[href*="hiunicornstudio"],
+        .unicorn-studio-watermark,
+        [class*="unicorn-studio"],
+        [id*="unicorn-studio"] {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+    </style>
+</head>
+<body class="text-white font-sans">
+
+    <!-- 유니콘 스튜디오 배경 -->
+    <div id="us-background" data-us-project="tDlTem0nwTZuNoVTI9HZ"></div>
+
+    <!-- 상단 헤더 영역 -->
+    <header class="w-full flex justify-between items-center px-8 py-6">
+        <!-- 왼쪽 웹사이트 이름 -->
+        <div class="text-xl font-bold tracking-wide flex items-center gap-2">
+            "하루" commit()
+        </div>
+
+        <!-- 오른쪽 버튼 영역 -->
+        <div class="flex items-center gap-6">
+            <button class="text-gray-300 hover:text-white transition-colors text-sm font-medium">
+                로그인
+            </button>
+            <button class="bg-white text-black px-5 py-2 rounded-full font-medium hover:bg-gray-200 transition-colors text-sm">
+                회원가입
+            </button>
+        </div>
+    </header>
+
+    <!-- 유니콘 스튜디오 스크립트 -->
+    <script type="text/javascript">
+        !function(){var u=window.UnicornStudio;if(u&&u.init){if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){u.init()})}else{u.init()}}else{window.UnicornStudio={isInitialized:!1};var i=document.createElement("script");i.src="https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v2.1.4/dist/unicornStudio.umd.js",i.onload=function(){if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){UnicornStudio.init()})}else{UnicornStudio.init()}},(document.head||document.body).appendChild(i)}}();
+    </script>
+    <script>
+        function removeUnicornWatermark() {
+            document.querySelectorAll('a[href*="unicorn.studio"], a[href*="hiunicornstudio"], .unicorn-studio-watermark, [class*="unicorn-studio"], [id*="unicorn-studio"]').forEach((node) => {
+                node.remove();
+            });
+        }
+
+        removeUnicornWatermark();
+
+        const watermarkObserver = new MutationObserver(() => {
+            removeUnicornWatermark();
+        });
+
+        watermarkObserver.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    </script>
+</body>
+</html>

@@ -1,3 +1,48 @@
+/* =========================
+   Common
+========================= */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatDiaryDate(dateString) {
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return dateString;
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}.${month}.${day}`;
+}
+
+function disableAutocompleteOutsideLogin() {
+    const body = document.body;
+    if (!body || body.classList.contains('page-login')) {
+        return;
+    }
+
+    document.querySelectorAll('form').forEach((form) => {
+        form.setAttribute('autocomplete', 'off');
+    });
+
+    document.querySelectorAll('input, textarea').forEach((field) => {
+        const type = (field.getAttribute('type') || '').toLowerCase();
+        if (['hidden', 'checkbox', 'radio', 'button', 'submit'].includes(type)) {
+            return;
+        }
+
+        field.setAttribute('autocomplete', 'off');
+        field.setAttribute('autocorrect', 'off');
+        field.setAttribute('autocapitalize', 'off');
+        field.setAttribute('spellcheck', 'false');
+    });
+}
+
+/* =========================
+   login.html
+========================= */
 function toggleForm(type) {
     const loginForm = document.getElementById('login-form');
     const signupForm = document.getElementById('signup-form');
@@ -15,6 +60,9 @@ function toggleForm(type) {
     }
 }
 
+/* =========================
+   ai-persona.html
+========================= */
 function addPersona() {
     const nameInput = document.getElementById('persona-name');
     const summaryInput = document.getElementById('persona-summary');
@@ -107,12 +155,9 @@ function deletePersona(button) {
     }
 }
 
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
+/* =========================
+   my-diary.html
+========================= */
 let diaryShelfIndex = 0;
 
 function openDiaryModal() {
@@ -166,14 +211,10 @@ function saveDiaryEntry() {
 
     book.innerHTML = `
         <div class="diary-book-inner">
-            <div>
-                <div class="diary-book-date">${escapeHtml(formatDiaryDate(date))}</div>
-                <div class="diary-book-title">${escapeHtml(title)}</div>
-                <div class="diary-book-preview">${escapeHtml(content).replace(/\n/g, '<br>')}</div>
-            </div>
+            <div class="diary-book-date">${escapeHtml(formatDiaryDate(date))}</div>
+            <div class="diary-book-title">${escapeHtml(title)}</div>
 
             <div class="diary-book-footer">
-                <span class="diary-book-badge">Diary</span>
                 <button type="button" class="diary-book-delete" onclick="deleteDiaryBook(this)">삭제</button>
             </div>
         </div>
@@ -187,10 +228,15 @@ function saveDiaryEntry() {
 
     diaryShelfIndex = 0;
     updateDiaryShelfPosition();
+    renderDiaryProgress();
     closeDiaryModal();
 }
 
 function deleteDiaryBook(button) {
+    if (!confirm('삭제하시겠습니까?')) {
+        return;
+    }
+
     const book = button.closest('.diary-book');
     const shelf = document.getElementById('diary-shelf');
 
@@ -215,6 +261,7 @@ function deleteDiaryBook(button) {
     }
 
     updateDiaryShelfPosition();
+    renderDiaryProgress();
 }
 
 function moveDiaryShelf(direction) {
@@ -231,6 +278,7 @@ function moveDiaryShelf(direction) {
     if (diaryShelfIndex > maxIndex) diaryShelfIndex = maxIndex;
 
     updateDiaryShelfPosition();
+    renderDiaryProgress();
 }
 
 function updateDiaryShelfPosition() {
@@ -238,10 +286,40 @@ function updateDiaryShelfPosition() {
     if (!shelf) return;
 
     const isMobile = window.innerWidth <= 768;
-    const step = isMobile ? 240 : 286;
+    const step = isMobile ? 90 : 106;
     const offset = diaryShelfIndex * step;
 
     shelf.style.transform = `translateX(-${offset}px)`;
+}
+
+function renderDiaryProgress() {
+    const progress = document.getElementById('diary-progress');
+    const shelf = document.getElementById('diary-shelf');
+
+    if (!progress || !shelf) return;
+
+    const books = shelf.querySelectorAll('.diary-book');
+    progress.innerHTML = '';
+
+    if (!books.length) {
+        for (let i = 0; i < 18; i++) {
+            const dot = document.createElement('span');
+            dot.className = 'diary-progress-dot';
+            progress.appendChild(dot);
+        }
+        return;
+    }
+
+    books.forEach((_, index) => {
+        const dot = document.createElement('span');
+        dot.className = 'diary-progress-dot';
+
+        if (index === diaryShelfIndex) {
+            dot.classList.add('active');
+        }
+
+        progress.appendChild(dot);
+    });
 }
 
 function fakeDiarySearch() {
@@ -258,24 +336,27 @@ function fakeDiarySearch() {
     }
 
     result.innerHTML = `
-        "${escapeHtml(keyword)}" 와 관련된 일기를 찾는 AI 검색 기능이 들어갈 자리예요.<br>
-        지금은 UI만 만든 상태이고, 나중에 비슷한 일기 내용이나 해당 날짜를 찾아주는 기능으로 연결하면 돼요.
+        "${escapeHtml(keyword)}" 와 관련한 일기를 찾는 AI 검색 기능이 들어갈 자리예요.<br>
+        지금은 UI만 만든 상태이고, 나중엔 비슷한 일기 내용이나 해당 날짜를 찾아주는 기능으로 연결하면 좋아요.
     `;
 }
 
-function formatDiaryDate(dateString) {
-    const date = new Date(dateString);
-    if (Number.isNaN(date.getTime())) return dateString;
+/* =========================
+   diary_write.html
+========================= */
+/* 현재 diary_write.html 전용 스크립트는 없습니다. */
 
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}.${month}.${day}`;
-}
-
-window.addEventListener('resize', updateDiaryShelfPosition);
+/* =========================
+   my-diary.html Events
+========================= */
+window.addEventListener('resize', () => {
+    updateDiaryShelfPosition();
+    renderDiaryProgress();
+});
 
 window.addEventListener('DOMContentLoaded', () => {
+    disableAutocompleteOutsideLogin();
+
     const shelfWrapper = document.querySelector('.diary-shelf-wrapper');
 
     if (shelfWrapper) {
@@ -295,4 +376,6 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         }, { passive: false });
     }
+
+    renderDiaryProgress();
 });
