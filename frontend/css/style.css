@@ -798,6 +798,12 @@ input:focus {
     border: 1px solid rgba(143, 35, 48, 0.35);
 }
 
+.voice-btn.recording {
+    background: rgba(86, 28, 36, 0.7);
+    color: #E8D8C4;
+    border-color: #561C24;
+}
+
 .voice-btn:hover,
 .save-btn:hover,
 .cancel-btn:hover,
