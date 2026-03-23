@@ -11,7 +11,7 @@ class AiFeedback(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     diary_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("diaries.id"), unique=True, nullable=False)  # 일기당 1개
-    persona_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("personas.id"), nullable=False)
+    persona_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("personas.id"), nullable=True)
     feedback_text: Mapped[str] = mapped_column(Text, nullable=False)
     audio_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     feedback_type: Mapped[str] = mapped_column(String(20), nullable=False)       # empathy | summary | advice

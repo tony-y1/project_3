@@ -33,6 +33,28 @@ async def create_diary(
     current_user: User = Depends(get_current_user),
 ):
     diary = await diary_svc.create_diary(db, current_user.id, body)
+
+    # 일기 생성 후 AI 피드백 자동 생성 (백그라운드)
+    try:
+        from app.models.persona import Persona
+        from sqlalchemy import select as sa_select
+        persona = None
+        if diary.persona_id:
+            result = await db.execute(sa_select(Persona).where(Persona.id == diary.persona_id))
+            persona = result.scalar_one_or_none()
+
+        await feedback_svc.create_feedback(
+            db=db,
+            diary_id=diary.id,
+            persona_id=diary.persona_id,
+            diary_content=diary.content,
+            persona_name=persona.name if persona else "말벗",
+            preset_type=persona.preset_type if persona else "empathy",
+            custom_description=persona.custom_description if persona else None,
+        )
+    except Exception:
+        pass  # 피드백 실패해도 일기 생성은 성공으로 처리
+    
     return diary
 
 
