@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Whisper STT 테스트</title>
+</head>
+<body>
+    <h2>🎙️ OpenAI Whisper STT 테스트</h2>
+    <p style="color:gray">녹음 완료 후 전송 방식 (배치)</p>
+
+    <button id="startBtn">🔴 녹음 시작</button>
+    <button id="stopBtn" disabled>⏹ 녹음 중지 후 변환</button>
+
+    <p>상태: <span id="status" style="color:gray">대기 중</span></p>
+    <p>최종 결과: <span id="final" style="color:black;font-weight:bold"></span></p>
+    <p>소요 시간: <span id="elapsed" style="color:blue"></span></p>
+
+    <script>
+        const startBtn = document.getElementById("startBtn");
+        const stopBtn  = document.getElementById("stopBtn");
+        const status   = document.getElementById("status");
+        const finalEl  = document.getElementById("final");
+        const elapsed  = document.getElementById("elapsed");
+
+        let mediaRecorder, audioChunks = [], t_start;
+
+        startBtn.onclick = async () => {
+            audioChunks = [];
+            finalEl.textContent = "";
+            elapsed.textContent = "";
+
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) audioChunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = async () => {
+                status.textContent = "변환 중...";
+                status.style.color = "orange";
+
+                const blob = new Blob(audioChunks, { type: "audio/webm" });
+                const formData = new FormData();
+                formData.append("file", blob, "audio.webm");
+
+                t_start = performance.now();
+                const response = await fetch("/api/v1/voice/stt", {
+                    method: "POST",
+                    body: formData,
+                });
+                const t_end = performance.now();
+                const sec = ((t_end - t_start) / 1000).toFixed(2);
+
+                const data = await response.json();
+                finalEl.textContent = data.transcript;
+                elapsed.textContent = `${sec}s (서버 변환 시간)`;
+                status.textContent = "변환 완료";
+                status.style.color = "green";
+
+                console.log(`Whisper 결과: ${data.transcript} | 소요: ${sec}s`);
+            };
+
+            mediaRecorder.start();
+            t_start = performance.now();
+            status.textContent = "🔴 녹음 중...";
+            status.style.color = "red";
+            startBtn.disabled = true;
+            stopBtn.disabled  = false;
+        };
+
+        stopBtn.onclick = () => {
+            mediaRecorder.stop();
+            startBtn.disabled = false;
+            stopBtn.disabled  = true;
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!-- frontend/stt_test.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>STT 실시간 테스트</title>
+</head>
+<body>
+    <h2>🎙️ 실시간 음성 인식</h2>
+
+    <button id="startBtn">🔴 녹음 시작</button>
+    <button id="stopBtn" disabled>⏹ 녹음 중지</button>
+
+    <p>인식 중: <span id="partial" style="color:gray"></span></p>
+    <p>최종 결과: <span id="final" style="color:black;font-weight:bold"></span></p>
+    <p>소요 시간: <span id="elapsed" style="color:blue"></span></p>
+    
+    <script>
+        const startBtn = document.getElementById("startBtn");
+        const stopBtn  = document.getElementById("stopBtn");
+        const partial  = document.getElementById("partial");
+        const finalEl  = document.getElementById("final");
+
+        let ws, audioContext, processor;
+        let t_start;
+        startBtn.onclick = async () => {
+            t_start = performance.now();
+            // 1. WebSocket 연결
+            ws = new WebSocket("ws://localhost:8000/api/v1/voice/ws/stt");
+            ws.onopen    = () => console.log("WebSocket 연결됨");
+            ws.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+                if (data.type === "partial") {
+                    partial.textContent = data.text;
+                } else if (data.type === "final") {
+                    // 속도 체크용 --
+                    const t_end = performance.now();
+                    const sec = ((t_end - t_start) / 1000).toFixed(2);
+                    elapsed.textContent = `${sec}s`;  
+                    console.log(`최종 인식: ${data.text} | 소요: ${sec}s`);
+                    // ----
+                    finalEl.textContent += data.text + " ";
+                    partial.textContent = "";
+                    t_start = performance.now();
+                }
+            };
+            ws.onerror = (e) => console.error("WebSocket 에러:", e);
+            ws.onclose = () => console.log("WebSocket 끊김");
+
+            // 2. 마이크 권한 요청
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            // 3. AudioContext로 PCM 변환 후 전송
+            audioContext = new AudioContext({ sampleRate: 16000 });
+            const source = audioContext.createMediaStreamSource(stream);
+            processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+            processor.onaudioprocess = (e) => {
+                const float32 = e.inputBuffer.getChannelData(0);
+                // Float32 → Int16 PCM 변환
+                const int16 = new Int16Array(float32.length);
+                for (let i = 0; i < float32.length; i++) {
+                    int16[i] = Math.max(-32768, Math.min(32767, float32[i] * 32768));
+                }
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(int16.buffer);
+                }
+            };
+
+            source.connect(processor);
+            processor.connect(audioContext.destination);
+
+            startBtn.disabled = true;
+            stopBtn.disabled  = false;
+        };
+
+        stopBtn.onclick = () => {
+            processor.disconnect();
+            audioContext.close();
+            ws.close();
+            startBtn.disabled = false;
+            stopBtn.disabled  = true;
+        };
+    </script>
+</body>
+</html>

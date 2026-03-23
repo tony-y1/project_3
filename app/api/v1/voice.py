@@ -5,10 +5,15 @@
 
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.responses import StreamingResponse, Response
+from fastapi import WebSocket, WebSocketDisconnect  # azure websocket 통신을 위해 추가 
+import asyncio                                      # azure websocket 통신을 위해 추가 
 from pydantic import BaseModel
 from app.services.stt_service import stt_service
 from app.services.tts_service import tts_service
 from app.services.gpt_service import gpt_service
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -75,3 +80,52 @@ async def stream_feedback_tts(request: StreamFeedbackRequest):
         media_type="audio/mpeg",
         headers={"X-Content-Type-Options": "nosniff"},
     )
+
+# ── WebSocket STT: 실시간 스트리밍 ───────────────────────
+@router.websocket("/ws/stt")
+async def websocket_stt(websocket: WebSocket):
+    await websocket.accept()
+    logger.info("WebSocket STT 연결됨")
+
+    recognizer, stream = stt_service.create_azure_recognizer()
+    loop = asyncio.get_event_loop()
+
+    # 중간 결과 (말하는 중)
+    def on_recognizing(evt):
+        logger.info(f"인식 중: {evt.result.text}")
+        loop.call_soon_threadsafe(
+            asyncio.ensure_future,
+            websocket.send_json({"type": "partial", "text": evt.result.text})
+        )
+
+    # 최종 결과 (문장 완성)
+    def on_recognized(evt):
+        logger.info(f"인식 완료: {evt.result.text}")
+        if evt.result.text:
+            loop.call_soon_threadsafe(
+                asyncio.ensure_future,
+                websocket.send_json({"type": "final", "text": evt.result.text})
+            )
+
+    # 취소/에러
+    def on_canceled(evt):
+        logger.error(f"Azure STT 취소됨: {evt.result.reason}")
+        logger.error(f"에러 상세: {evt.result.cancellation_details}")
+
+    recognizer.recognizing.connect(on_recognizing)
+    recognizer.recognized.connect(on_recognized)
+    recognizer.canceled.connect(on_canceled)
+    recognizer.start_continuous_recognition()
+    logger.info("Azure STT 인식 시작됨")
+
+    try:
+        while True:
+            # 브라우저에서 오디오 청크 수신
+            audio_chunk = await websocket.receive_bytes()
+            logger.info(f"오디오 청크 수신: {len(audio_chunk)} bytes")
+            stream.write(audio_chunk)
+    except WebSocketDisconnect:
+        logger.info("WebSocket STT 연결 끊김")
+    finally:
+        recognizer.stop_continuous_recognition()
+        stream.close()

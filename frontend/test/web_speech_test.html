@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Web Speech API STT 테스트</title>
+</head>
+<body>
+    <h2>🎙️ Web Speech API 실시간 음성 인식</h2>
+
+    <button id="startBtn">🔴 녹음 시작</button>
+    <button id="stopBtn" disabled>⏹ 녹음 중지</button>
+
+    <p>인식 중: <span id="partial" style="color:gray"></span></p>
+    <p>최종 결과: <span id="final" style="color:black;font-weight:bold"></span></p>
+    <p>소요 시간: <span id="elapsed" style="color:blue"></span></p>
+
+    <script>
+        const startBtn = document.getElementById("startBtn");
+        const stopBtn  = document.getElementById("stopBtn");
+        const partial  = document.getElementById("partial");
+        const finalEl  = document.getElementById("final");
+        const elapsed  = document.getElementById("elapsed");
+
+        // Web Speech API 지원 여부 확인
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            document.body.innerHTML = "<h2>❌ 이 브라우저는 Web Speech API를 지원하지 않아요. Chrome을 사용해주세요.</h2>";
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.lang = "ko-KR";
+        recognition.continuous = true;      // 계속 인식
+        recognition.interimResults = true;  // 중간 결과 표시
+
+        let t_start;
+
+        recognition.onstart = () => {
+            t_start = performance.now();
+            console.log("Web Speech API 시작됨");
+        };
+
+        recognition.onresult = (e) => {
+            let interimText = "";
+            let finalText = "";
+
+            for (let i = e.resultIndex; i < e.results.length; i++) {
+                if (e.results[i].isFinal) {
+                    finalText += e.results[i][0].transcript;
+                    const t_end = performance.now();
+                    const sec = ((t_end - t_start) / 1000).toFixed(2);
+                    elapsed.textContent = `${sec}s`;
+                    console.log(`최종 인식: ${finalText} | 소요: ${sec}s`);
+                    t_start = performance.now(); // 다음 문장 타이머 리셋
+                } else {
+                    interimText += e.results[i][0].transcript;
+                }
+            }
+
+            if (interimText) partial.textContent = interimText;
+            if (finalText)   finalEl.textContent += finalText + " ";
+        };
+
+        recognition.onend = () => {
+            console.log("Web Speech API 종료됨 → 자동 재시작");
+            if (!isStopped) {  // 사용자가 직접 중지 누른 게 아니면
+                recognition.start();
+                t_start = performance.now();
+            }
+        };
+        
+        recognition.onerror = (e) => {
+            console.error("Web Speech API 에러:", e.error);
+        };
+
+        startBtn.onclick = () => {
+            recognition.start();
+            startBtn.disabled = true;
+            stopBtn.disabled  = false;
+            partial.textContent = "";
+            finalEl.textContent = "";
+            elapsed.textContent = "";
+        };
+
+        stopBtn.onclick = () => {
+            recognition.stop();
+            startBtn.disabled = false;
+            stopBtn.disabled  = true;
+        };
+    </script>
+</body>
+</html>

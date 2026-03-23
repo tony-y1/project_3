@@ -8,6 +8,8 @@ import uuid
 # ── 일기 생성할 때 받는 데이터 ──────────────────
 class DiaryCreate(BaseModel):
     title: Optional[str] = Field(None, max_length=200)
+    emotion: Optional[str] = Field(None, max_length=100)
+    weather: Optional[str] = Field(None, max_length=100)
     content: str
     diary_date: date
     input_type: str = "text"          # "text" | "voice" | "mixed"
@@ -18,6 +20,8 @@ class DiaryCreate(BaseModel):
 # ── 일기 수정할 때 받는 데이터 ──────────────────
 class DiaryUpdate(BaseModel):
     title: Optional[str] = Field(None, max_length=200)
+    emotion: Optional[str] = Field(None, max_length=100)
+    weather: Optional[str] = Field(None, max_length=100)
     content: Optional[str] = None
     diary_date: Optional[date] = None
 
@@ -28,6 +32,8 @@ class DiaryResponse(BaseModel):
     user_id: uuid.UUID
     persona_id: Optional[uuid.UUID]
     title: Optional[str]
+    emotion: Optional[str]
+    weather: Optional[str]
     content: str
     input_type: str
     diary_date: date

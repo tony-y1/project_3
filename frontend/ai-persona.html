@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI 페르소나 관리 - "하루" commit()</title>
 
+    <script>
+        if (!localStorage.getItem("access_token")) {
+            window.location.replace("login.html");
+        }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,7 +30,7 @@
     <main class="min-h-screen px-6 py-24 md:px-10 lg:px-16">
         <div class="max-w-7xl mx-auto">
             <div class="text-center mb-14">
-                <p class="font-script text-2xl md:text-3xl text-[#E8D8C4]/85 mb-4">AI Persona Studio</p>
+                <p class="font-script text-2xl md:text-3xl text-[#E8D8C4]/85 mb-4">AI Persona</p>
                 <h1 class="text-3xl md:text-5xl tracking-tight text-[#E8D8C4] font-semibold mb-4">
                     AI 페르소나 관리
                 </h1>
@@ -135,5 +140,7 @@
     </main>
 
     <script src="js/frontend.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
 </body>
 </html>

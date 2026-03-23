@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>&#45236; &#54532;&#47196;&#54596; - "&#54616;&#47336;" commit()</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Petit+Formal+Script&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page-profile min-h-screen font-kr relative">
+    <div class="absolute top-0 left-0 w-full h-16 z-30 peer"></div>
+
+    <nav class="absolute top-0 left-0 w-full text-[#E8D8C4] shadow-2xl z-40 transform -translate-y-full transition-transform duration-500 ease-in-out peer-hover:translate-y-0 hover:translate-y-0 border-b border-[#C7B7A3]/20" style="background-color: var(--nav-bg);">
+        <div class="w-full max-w-7xl mx-auto flex justify-between items-center px-8 md:px-16 py-6 font-kr">
+            <a href="index.html" class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300">&#47700;&#51064;&#51004;&#47196;</a>
+            <a href="my-diary.html" class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300">&#45208;&#51032; &#51068;&#44592;&#51109;</a>
+            <button id="profile-logout-button" type="button" class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300 bg-transparent border-0 text-[#E8D8C4]">&#47196;&#44536;&#50500;&#50883;</button>
+        </div>
+    </nav>
+
+    <main class="min-h-screen px-6 py-16 md:px-10 lg:px-16">
+        <div class="profile-shell">
+            <section class="profile-hero">
+                <p class="font-script text-2xl md:text-3xl text-[#E8D8C4]/85 mb-3">My profile</p>
+                <h1 class="text-3xl md:text-5xl tracking-tight text-[#E8D8C4] font-semibold mb-4">&#45236; &#54532;&#47196;&#54596;</h1>
+                <div class="profile-hero-line"></div>
+                <p class="profile-hero-copy">
+                    &#45804;&#47141;&#44284; &#50508;&#46988;&#51012; &#53485;&#50640;&#49436; &#45208;&#45576;&#49436; &#44288;&#47532;&#54624; &#49688; &#51080;&#50612;&#50836;.
+                </p>
+            </section>
+
+            <section class="profile-tabs-card">
+                <div class="profile-tabs">
+                    <button id="profile-tab-calendar" type="button" class="profile-tab-button is-active" data-tab-target="calendar">
+                        &#45804;&#47141;
+                    </button>
+                    <button id="profile-tab-alarm" type="button" class="profile-tab-button" data-tab-target="alarm">
+                        &#50508;&#46988;
+                    </button>
+                </div>
+
+                <div id="profile-panel-calendar" class="profile-tab-panel">
+                    <section class="profile-calendar-card">
+                        <div class="profile-calendar-header">
+                            <button id="profile-calendar-prev" type="button" class="profile-calendar-nav">&#51060;&#51204;</button>
+                            <div>
+                                <p class="profile-calendar-caption">Diary calendar</p>
+                                <h2 id="profile-calendar-title" class="profile-calendar-title">2026&#45380; 3&#50900;</h2>
+                            </div>
+                            <button id="profile-calendar-next" type="button" class="profile-calendar-nav">&#45796;&#51020;</button>
+                        </div>
+
+                        <div class="profile-calendar-weekdays">
+                            <span>&#51068;</span>
+                            <span>&#50900;</span>
+                            <span>&#54868;</span>
+                            <span>&#49688;</span>
+                            <span>&#47785;</span>
+                            <span>&#44552;</span>
+                            <span>&#53664;</span>
+                        </div>
+
+                        <div id="profile-calendar-grid" class="profile-calendar-grid"></div>
+
+                        <div class="profile-calendar-legend">
+                            <span class="profile-legend-dot"></span>
+                            <span>&#51068;&#44592; &#51089;&#49457; &#50756;&#47308;</span>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="profile-panel-alarm" class="profile-tab-panel hidden">
+                    <section class="profile-alarm-card">
+                        <div class="profile-alarm-header">
+                            <div>
+                                <p class="profile-calendar-caption">Alarm settings</p>
+                                <h2 class="profile-calendar-title">&#50508;&#46988; &#49444;&#51221;</h2>
+                            </div>
+                            <button id="profile-alarm-save" type="button" class="profile-calendar-nav">&#51200;&#51109;</button>
+                        </div>
+
+                        <p class="profile-alarm-copy">
+                            &#50836;&#51068;&#48324;&#47196; &#50896;&#54616;&#45716; &#49884;&#44036;&#51012; &#51221;&#54616;&#44256; &#50508;&#46988;&#51012; &#52940; &#49688; &#51080;&#50612;&#50836;.
+                        </p>
+
+                        <div class="profile-alarm-list">
+                            <div class="profile-alarm-row" data-day="sun">
+                                <span class="profile-alarm-day">&#51068;&#50836;&#51068;</span>
+                                <label class="profile-alarm-switch">
+                                    <input type="checkbox" class="profile-alarm-enabled">
+                                    <span class="profile-alarm-switch-ui"></span>
+                                </label>
+                                <input type="time" class="profile-alarm-time" value="08:00">
+                            </div>
+                            <div class="profile-alarm-row" data-day="mon">
+                                <span class="profile-alarm-day">&#50900;&#50836;&#51068;</span>
+                                <label class="profile-alarm-switch">
+                                    <input type="checkbox" class="profile-alarm-enabled">
+                                    <span class="profile-alarm-switch-ui"></span>
+                                </label>
+                                <input type="time" class="profile-alarm-time" value="08:00">
+                            </div>
+                            <div class="profile-alarm-row" data-day="tue">
+                                <span class="profile-alarm-day">&#54868;&#50836;&#51068;</span>
+                                <label class="profile-alarm-switch">
+                                    <input type="checkbox" class="profile-alarm-enabled">
+                                    <span class="profile-alarm-switch-ui"></span>
+                                </label>
+                                <input type="time" class="profile-alarm-time" value="08:00">
+                            </div>
+                            <div class="profile-alarm-row" data-day="wed">
+                                <span class="profile-alarm-day">&#49688;&#50836;&#51068;</span>
+                                <label class="profile-alarm-switch">
+                                    <input type="checkbox" class="profile-alarm-enabled">
+                                    <span class="profile-alarm-switch-ui"></span>
+                                </label>
+                                <input type="time" class="profile-alarm-time" value="08:00">
+                            </div>
+                            <div class="profile-alarm-row" data-day="thu">
+                                <span class="profile-alarm-day">&#47785;&#50836;&#51068;</span>
+                                <label class="profile-alarm-switch">
+                                    <input type="checkbox" class="profile-alarm-enabled">
+                                    <span class="profile-alarm-switch-ui"></span>
+                                </label>
+                                <input type="time" class="profile-alarm-time" value="08:00">
+                            </div>
+                            <div class="profile-alarm-row" data-day="fri">
+                                <span class="profile-alarm-day">&#44552;&#50836;&#51068;</span>
+                                <label class="profile-alarm-switch">
+                                    <input type="checkbox" class="profile-alarm-enabled">
+                                    <span class="profile-alarm-switch-ui"></span>
+                                </label>
+                                <input type="time" class="profile-alarm-time" value="08:00">
+                            </div>
+                            <div class="profile-alarm-row" data-day="sat">
+                                <span class="profile-alarm-day">&#53664;&#50836;&#51068;</span>
+                                <label class="profile-alarm-switch">
+                                    <input type="checkbox" class="profile-alarm-enabled">
+                                    <span class="profile-alarm-switch-ui"></span>
+                                </label>
+                                <input type="time" class="profile-alarm-time" value="08:00">
+                            </div>
+                        </div>
+
+                        <p id="profile-alarm-message" class="profile-alarm-message hidden"></p>
+                    </section>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/frontend.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>

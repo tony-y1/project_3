@@ -1,11 +1,10 @@
 # 담당 : A팀원 유가영
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
-from sqlalchemy.orm import selectinload
 import uuid
 
 from app.models.diary import Diary
-from app.models.hashtag import Hashtag
+from app.models.hashtag import Hashtag, DiaryHashtag
 from app.schemas.diary import DiaryCreate, DiaryUpdate
 
 
@@ -22,16 +21,33 @@ class DiaryService:
             user_id=user_id,
             persona_id=data.persona_id,
             title=data.title,
+            emotion=data.emotion,
+            weather=data.weather,
             content=data.content,
             input_type=data.input_type,
             diary_date=data.diary_date,
         )
         db.add(diary)
-        await db.flush()          # id 먼저 확보
+        await db.flush()  # id 먼저 확보
 
-        # 해시태그 저장
+        # 해시태그 저장 (Hashtag 생성 → DiaryHashtag 연결)
         for tag in data.hashtags:
-            db.add(Hashtag(diary_id=diary.id, tag=tag.strip()))
+            tag_name = tag.strip()
+            # 기존 태그 조회
+            existing = await db.execute(
+                select(Hashtag).where(
+                    Hashtag.user_id == user_id,
+                    Hashtag.name == tag_name,
+                )
+            )
+            hashtag = existing.scalar_one_or_none()
+            # 없으면 새로 생성
+            if not hashtag:
+                hashtag = Hashtag(user_id=user_id, name=tag_name)
+                db.add(hashtag)
+                await db.flush()
+            # 일기-태그 연결
+            db.add(DiaryHashtag(diary_id=diary.id, hashtag_id=hashtag.id))
 
         await db.commit()
         await db.refresh(diary)
@@ -50,7 +66,12 @@ class DiaryService:
             .order_by(desc(Diary.diary_date))
         )
         if tag:
-            stmt = stmt.join(Diary.hashtags).where(Hashtag.tag == tag)
+            stmt = (
+                stmt
+                .join(DiaryHashtag, Diary.id == DiaryHashtag.diary_id)
+                .join(Hashtag, DiaryHashtag.hashtag_id == Hashtag.id)
+                .where(Hashtag.name == tag)
+            )
 
         result = await db.execute(stmt)
         return result.scalars().all()
@@ -78,6 +99,10 @@ class DiaryService:
     ) -> Diary:
         if data.title is not None:
             diary.title = data.title
+        if data.emotion is not None:
+            diary.emotion = data.emotion
+        if data.weather is not None:
+            diary.weather = data.weather
         if data.content is not None:
             diary.content = data.content
         if data.diary_date is not None:
