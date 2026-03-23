@@ -43,9 +43,14 @@
                             <h2 class="text-2xl md:text-3xl font-semibold text-[#561C24]">나의 하루 기록하기</h2>
                         </div>
 
-                        <button type="button" class="voice-btn">
-                            음성으로 입력
-                        </button>
+                        <div class="flex flex-col items-end gap-1">
+                            <button type="button" id="voice-btn" class="voice-btn">음성으로 입력</button>
+                            <div class="flex items-center gap-1 text-xs text-[#561C24]/40">
+                                <span>모드:</span>
+                                <button type="button" id="stt-mode-toggle" class="text-xs text-[#561C24]/60 underline underline-offset-2 hover:text-[#561C24] transition-colors bg-transparent border-none cursor-pointer p-0"></button>
+                            </div>
+                            <span id="stt-status" class="hidden text-xs text-[#561C24]/60 text-right max-w-[200px] leading-snug"></span>
+                        </div>
                     </div>
 
                     <form id="diary-create-form" class="space-y-6">
@@ -136,5 +141,6 @@
     <script src="js/frontend.js"></script>
     <script src="js/api.js"></script>
     <script src="js/diary.js"></script>
+    <script src="js/stt.js"></script>
 </body>
 </html>
