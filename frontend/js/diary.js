@@ -2,22 +2,59 @@ function createDiaryCard(diary) {
     const book = document.createElement("div");
     book.className = "diary-book";
     book.dataset.diaryId = diary.id;
-    book.addEventListener("click", () => {
+
+    book.addEventListener("click", (e) => {
+        if (e.target.closest(".diary-book-delete")) return;
         window.location.href = `diary_read.html?id=${encodeURIComponent(diary.id)}`;
     });
 
     book.innerHTML = `
+        <div class="diary-book-spine"></div>
+        <div class="diary-book-pages"></div>
+        <div class="diary-book-cover"></div>
         <div class="diary-book-inner">
             <div class="diary-book-date">${escapeHtml(formatDiaryDate(diary.diary_date))}</div>
-            <div class="diary-book-title">${escapeHtml(diary.title || "제목 없음")}</div>
+            <div class="diary-book-deco"></div>
+            <div class="diary-book-footer">
+                <button type="button" class="diary-book-delete">삭제</button>
+            </div>
         </div>
     `;
+
+    book.querySelector(".diary-book-delete").addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (!window.confirm("이 일기를 삭제할까요?")) return;
+
+        try {
+            await deleteDiary(diary.id);
+            book.remove();
+
+            const shelf = document.getElementById("diary-shelf");
+            if (shelf && !shelf.querySelector(".diary-book")) {
+                shelf.innerHTML = `
+                    <div class="diary-empty-book" id="diary-empty-state">
+                        아직 저장된 일기가 없어요.<br>
+                        첫 번째 일기를 작성해보세요.
+                    </div>
+                `;
+            }
+            diaryShelfIndex = 0;
+            updateDiaryShelfPosition();
+            renderDiaryProgress();
+        } catch (error) {
+            window.alert(error.message || "일기 삭제에 실패했어요.");
+        }
+    });
 
     return book;
 }
 
 async function fetchDiaries() {
     return apiRequest("/diaries/", { method: "GET" });
+}
+
+async function fetchPersonas() {
+    return apiRequest("/personas/", { method: "GET" });
 }
 
 async function fetchDiary(diaryId) {
@@ -42,6 +79,31 @@ async function deleteDiary(diaryId) {
     return apiRequest(`/diaries/${encodeURIComponent(diaryId)}`, {
         method: "DELETE",
     });
+}
+
+async function populatePersonaSelect(selectElement, selectedPersonaId = "") {
+    if (!selectElement) {
+        return;
+    }
+
+    try {
+        const personas = await fetchPersonas();
+        selectElement.innerHTML = '<option value="" selected disabled hidden>선택하기</option>';
+
+        personas.forEach((persona) => {
+            const option = document.createElement("option");
+            option.value = persona.id;
+            option.textContent = persona.name;
+
+            if (selectedPersonaId && persona.id === selectedPersonaId) {
+                option.selected = true;
+            }
+
+            selectElement.appendChild(option);
+        });
+    } catch (_error) {
+        selectElement.innerHTML = '<option value="" selected disabled hidden>선택하기</option>';
+    }
 }
 
 async function renderDiaryShelfFromApi() {
@@ -89,6 +151,7 @@ async function handleDiaryCreateSubmit(event) {
     const weatherInput = document.getElementById("diary-weather");
     const titleInput = document.getElementById("diary-title");
     const contentInput = document.getElementById("diary-content");
+    const personaSelect = document.getElementById("diary-persona-select");
     const saveButton = document.getElementById("diary-save-button");
 
     if (!dateInput || !titleInput || !contentInput || !saveButton) {
@@ -118,7 +181,7 @@ async function handleDiaryCreateSubmit(event) {
             diary_date: diaryDate,
             input_type: "text",
             hashtags: [],
-            persona_id: null,
+            persona_id: personaSelect?.value || null,
         });
         window.location.href = `diary_read.html?id=${encodeURIComponent(diary.id)}`;
 
@@ -144,6 +207,7 @@ function initDiaryDetailPage() {
     const autoSummaryToggle = document.getElementById("ai-auto-summary-toggle");
     const autoSummaryState = document.getElementById("ai-auto-summary-state");
     const manualSummaryButton = document.getElementById("ai-manual-summary-button");
+    const personaSelect = document.getElementById("diary-persona-select");
 
     if (!form) {
         return;
@@ -153,6 +217,8 @@ function initDiaryDetailPage() {
     if (dateInput && !dateInput.value) {
         dateInput.value = new Date().toISOString().slice(0, 10);
     }
+
+    populatePersonaSelect(personaSelect);
 
     if (autoSummaryToggle && autoSummaryState && manualSummaryButton) {
         autoSummaryToggle.addEventListener("click", () => {
@@ -205,6 +271,7 @@ async function initDiaryReadPage() {
         weatherEl.value = diary.weather || "";
         titleEl.value = diary.title || "";
         contentEl.value = diary.content || "";
+        await populatePersonaSelect(personaSelect, diary.persona_id || "");
         setDiaryReadOnly(fields, true);
 
         if (rerollSummaryButton) {
@@ -241,6 +308,7 @@ async function initDiaryReadPage() {
                         weather: weatherEl.value.trim() || null,
                         content: contentEl.value.trim(),
                         diary_date: dateEl.value.trim(),
+                        persona_id: personaSelect?.value || null,
                     });
 
                     dateEl.value = updatedDiary.diary_date || "";
@@ -248,6 +316,7 @@ async function initDiaryReadPage() {
                     weatherEl.value = updatedDiary.weather || "";
                     titleEl.value = updatedDiary.title || "";
                     contentEl.value = updatedDiary.content || "";
+                    await populatePersonaSelect(personaSelect, updatedDiary.persona_id || "");
 
                     isEditing = false;
                     setDiaryReadOnly(fields, true);

@@ -65,23 +65,19 @@ function toggleForm(type) {
 ========================= */
 function addPersona() {
     const nameInput = document.getElementById("persona-name");
-    const summaryInput = document.getElementById("persona-summary");
     const toneInput = document.getElementById("persona-tone");
     const styleInput = document.getElementById("persona-style");
-    const expressionInput = document.getElementById("persona-expression");
     const personaList = document.getElementById("persona-list");
 
-    if (!nameInput || !summaryInput || !toneInput || !styleInput || !expressionInput || !personaList) {
+    if (!nameInput || !toneInput || !styleInput || !personaList) {
         return;
     }
 
     const name = nameInput.value.trim();
-    const summary = summaryInput.value.trim();
     const tone = toneInput.value.trim();
     const style = styleInput.value.trim();
-    const expression = expressionInput.value.trim();
 
-    if (!name || !summary || !tone || !style || !expression) {
+    if (!name || !tone || !style) {
         alert("모든 항목을 입력해주세요.");
         return;
     }
@@ -98,7 +94,6 @@ function addPersona() {
         <div class="persona-card-header">
             <div>
                 <div class="persona-card-title">${escapeHtml(name)}</div>
-                <div class="persona-card-summary">${escapeHtml(summary)}</div>
             </div>
             <button type="button" class="persona-delete-btn" onclick="deletePersona(this)">삭제</button>
         </div>
@@ -117,21 +112,14 @@ function addPersona() {
                 <span class="persona-meta-label">AI 반응 스타일</span>
                 <div class="persona-meta-value">${escapeHtml(style).replace(/\n/g, "<br>")}</div>
             </div>
-
-            <div class="persona-meta-item">
-                <span class="persona-meta-label">자주 쓰는 표현</span>
-                <div class="persona-meta-value">${escapeHtml(expression).replace(/\n/g, "<br>")}</div>
-            </div>
         </div>
     `;
 
     personaList.prepend(card);
 
     nameInput.value = "";
-    summaryInput.value = "";
     toneInput.value = "";
     styleInput.value = "";
-    expressionInput.value = "";
 }
 
 function deletePersona(button) {
@@ -542,6 +530,485 @@ async function initProfilePage() {
     });
 }
 
+function renderProfileCalendar() {
+    const yearSelect = document.getElementById("profile-calendar-year");
+    const monthSelect = document.getElementById("profile-calendar-month");
+    const grid = document.getElementById("profile-calendar-grid");
+
+    if (!yearSelect || !monthSelect || !grid) {
+        return;
+    }
+
+    const current = new Date(profileCalendarDate.getFullYear(), profileCalendarDate.getMonth(), 1);
+    const year = current.getFullYear();
+    const month = current.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+
+    yearSelect.value = String(year);
+    monthSelect.value = String(month + 1);
+    grid.innerHTML = "";
+
+    for (let i = 0; i < firstDay.getDay(); i++) {
+        const emptyCell = document.createElement("div");
+        emptyCell.className = "profile-calendar-cell is-empty";
+        grid.appendChild(emptyCell);
+    }
+
+    for (let day = 1; day <= lastDay.getDate(); day++) {
+        const cellDate = new Date(year, month, day);
+        const key = formatProfileDateKey(cellDate);
+        const hasDiary = profileDiaryDates.has(key);
+        const cell = document.createElement("div");
+
+        cell.className = `profile-calendar-cell${hasDiary ? " has-diary" : ""}`;
+        cell.innerHTML = `
+            <span class="profile-calendar-day">${day}</span>
+            ${hasDiary ? '<span class="profile-calendar-mark">작성 완료</span>' : ""}
+        `;
+
+        grid.appendChild(cell);
+    }
+}
+
+function initProfileCalendarControls() {
+    const yearSelect = document.getElementById("profile-calendar-year");
+    const monthSelect = document.getElementById("profile-calendar-month");
+
+    if (!yearSelect || !monthSelect) {
+        return;
+    }
+
+    if (!yearSelect.options.length) {
+        for (let year = 2020; year <= 2035; year++) {
+            const option = document.createElement("option");
+            option.value = String(year);
+            option.textContent = `${year}년`;
+            yearSelect.appendChild(option);
+        }
+    }
+
+    if (!monthSelect.options.length) {
+        for (let month = 1; month <= 12; month++) {
+            const option = document.createElement("option");
+            option.value = String(month);
+            option.textContent = `${month}월`;
+            monthSelect.appendChild(option);
+        }
+    }
+
+    yearSelect.value = String(profileCalendarDate.getFullYear());
+    monthSelect.value = String(profileCalendarDate.getMonth() + 1);
+
+    yearSelect.addEventListener("change", () => {
+        profileCalendarDate = new Date(Number(yearSelect.value), profileCalendarDate.getMonth(), 1);
+        renderProfileCalendar();
+    });
+
+    monthSelect.addEventListener("change", () => {
+        profileCalendarDate = new Date(profileCalendarDate.getFullYear(), Number(monthSelect.value) - 1, 1);
+        renderProfileCalendar();
+    });
+}
+
+function renderProfileCalendar() {
+    const yearSelect = document.getElementById("profile-calendar-year");
+    const monthSelect = document.getElementById("profile-calendar-month");
+    const grid = document.getElementById("profile-calendar-grid");
+
+    if (!yearSelect || !monthSelect || !grid) {
+        return;
+    }
+
+    const current = new Date(profileCalendarDate.getFullYear(), profileCalendarDate.getMonth(), 1);
+    const year = current.getFullYear();
+    const month = current.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+
+    yearSelect.value = String(year);
+    monthSelect.value = String(month + 1);
+    grid.innerHTML = "";
+
+    for (let i = 0; i < firstDay.getDay(); i++) {
+        const emptyCell = document.createElement("div");
+        emptyCell.className = "profile-calendar-cell is-empty";
+        grid.appendChild(emptyCell);
+    }
+
+    for (let day = 1; day <= lastDay.getDate(); day++) {
+        const cellDate = new Date(year, month, day);
+        const key = formatProfileDateKey(cellDate);
+        const hasDiary = profileDiaryDates.has(key);
+        const cell = document.createElement("div");
+
+        cell.className = `profile-calendar-cell${hasDiary ? " has-diary" : ""}`;
+        cell.innerHTML = `
+            <span class="profile-calendar-day">${day}</span>
+            ${hasDiary ? '<span class="profile-calendar-mark">작성 완료</span>' : ""}
+        `;
+
+        grid.appendChild(cell);
+    }
+}
+
+function initProfileAlarmPage() {
+    const rows = document.querySelectorAll(".profile-alarm-row");
+    const saveButton = document.getElementById("profile-alarm-save");
+    const message = document.getElementById("profile-alarm-message");
+
+    if (!rows.length || !saveButton) {
+        return;
+    }
+
+    const settings = loadProfileAlarmSettings();
+
+    rows.forEach((row) => {
+        const day = row.dataset.day;
+        const enabledInput = row.querySelector(".profile-alarm-enabled");
+        const timeInput = row.querySelector(".profile-alarm-time");
+
+        if (!day || !enabledInput || !timeInput) {
+            return;
+        }
+
+        const saved = settings[day];
+        enabledInput.checked = Boolean(saved?.enabled);
+        timeInput.value = saved?.time || timeInput.value || "08:00";
+        setProfileAlarmRowState(row, enabledInput.checked);
+
+        enabledInput.addEventListener("change", () => {
+            setProfileAlarmRowState(row, enabledInput.checked);
+            if (message) {
+                message.classList.add("hidden");
+                message.textContent = "";
+            }
+        });
+    });
+
+    saveButton.addEventListener("click", () => {
+        const nextSettings = {};
+
+        rows.forEach((row) => {
+            const day = row.dataset.day;
+            const enabledInput = row.querySelector(".profile-alarm-enabled");
+            const timeInput = row.querySelector(".profile-alarm-time");
+
+            if (!day || !enabledInput || !timeInput) {
+                return;
+            }
+
+            nextSettings[day] = {
+                enabled: enabledInput.checked,
+                time: timeInput.value || "08:00",
+            };
+        });
+
+        saveProfileAlarmSettings(nextSettings);
+
+        if (message) {
+            message.textContent = "알람 설정이 저장되었어요.";
+            message.classList.remove("hidden");
+        }
+    });
+}
+
+function initProfileCalendarControls() {
+    const yearSelect = document.getElementById("profile-calendar-year");
+    const monthSelect = document.getElementById("profile-calendar-month");
+
+    if (!yearSelect || !monthSelect) {
+        return;
+    }
+
+    if (!yearSelect.options.length) {
+        for (let year = 2020; year <= 2035; year++) {
+            const option = document.createElement("option");
+            option.value = String(year);
+            option.textContent = `${year}년`;
+            yearSelect.appendChild(option);
+        }
+    }
+
+    if (!monthSelect.options.length) {
+        for (let month = 1; month <= 12; month++) {
+            const option = document.createElement("option");
+            option.value = String(month);
+            option.textContent = `${month}월`;
+            monthSelect.appendChild(option);
+        }
+    }
+
+    yearSelect.value = String(profileCalendarDate.getFullYear());
+    monthSelect.value = String(profileCalendarDate.getMonth() + 1);
+
+    yearSelect.addEventListener("change", () => {
+        profileCalendarDate = new Date(Number(yearSelect.value), profileCalendarDate.getMonth(), 1);
+        renderProfileCalendar();
+    });
+
+    monthSelect.addEventListener("change", () => {
+        profileCalendarDate = new Date(profileCalendarDate.getFullYear(), Number(monthSelect.value) - 1, 1);
+        renderProfileCalendar();
+    });
+}
+
+async function initProfilePage() {
+    const grid = document.getElementById("profile-calendar-grid");
+
+    initProfileTabs();
+    initProfileAlarmPage();
+
+    if (!grid || typeof apiRequest !== "function") {
+        return;
+    }
+
+    profileCalendarDate = new Date();
+    profileCalendarDate.setDate(1);
+    initProfileCalendarControls();
+
+    try {
+        const diaries = await apiRequest("/diaries/", { method: "GET" });
+        profileDiaryDates = new Set(
+            diaries
+                .map((diary) => diary.diary_date)
+                .filter(Boolean)
+        );
+    } catch (_error) {
+        profileDiaryDates = new Set();
+    }
+
+    renderProfileCalendar();
+}
+
+function addPersona() {
+    const nameInput = document.getElementById("persona-name");
+    const toneInput = document.getElementById("persona-tone");
+    const styleInput = document.getElementById("persona-style");
+    const personaList = document.getElementById("persona-list");
+
+    if (!nameInput || !toneInput || !styleInput || !personaList) {
+        return;
+    }
+
+    const name = nameInput.value.trim();
+    const tone = toneInput.value.trim();
+    const style = styleInput.value.trim();
+
+    if (!name || !tone || !style) {
+        alert("모든 항목을 입력해주세요.");
+        return;
+    }
+
+    const emptyBox = personaList.querySelector(".persona-empty");
+    if (emptyBox) {
+        emptyBox.remove();
+    }
+
+    const card = document.createElement("div");
+    card.className = "persona-card";
+
+    card.innerHTML = `
+        <details class="persona-card-details">
+            <summary class="persona-card-summary-row">
+                <span class="persona-card-title">${escapeHtml(name)}</span>
+                <span class="persona-card-arrow">▼</span>
+            </summary>
+            <div class="persona-card-content">
+                <div class="persona-meta">
+                    <div class="persona-meta-item">
+                        <span class="persona-meta-label">말투 / 분위기</span>
+                        <div class="persona-meta-value">${escapeHtml(tone)}</div>
+                    </div>
+                    <div class="persona-meta-item">
+                        <span class="persona-meta-label">AI 반응 스타일</span>
+                        <div class="persona-meta-value">${escapeHtml(style).replace(/\n/g, "<br>")}</div>
+                    </div>
+                </div>
+                <div class="persona-card-actions">
+                    <button type="button" class="persona-delete-btn" onclick="deletePersona(this)">삭제</button>
+                </div>
+            </div>
+        </details>
+    `;
+
+    personaList.prepend(card);
+
+    nameInput.value = "";
+    toneInput.value = "";
+    styleInput.value = "";
+}
+
+function buildPersonaDescription(tone, style) {
+    return JSON.stringify({ tone, style });
+}
+
+function parsePersonaDescription(description) {
+    if (!description) {
+        return { tone: "", style: "" };
+    }
+
+    try {
+        const parsed = JSON.parse(description);
+        return {
+            tone: parsed.tone || "",
+            style: parsed.style || "",
+        };
+    } catch (_error) {
+        return { tone: "", style: description };
+    }
+}
+
+function renderPersonaCard(persona) {
+    const personaList = document.getElementById("persona-list");
+    if (!personaList) {
+        return;
+    }
+
+    const { tone, style } = parsePersonaDescription(persona.custom_description);
+    const card = document.createElement("div");
+    card.className = "persona-card";
+    card.dataset.personaId = persona.id;
+
+    card.innerHTML = `
+        <details class="persona-card-details">
+            <summary class="persona-card-summary-row">
+                <span class="persona-card-title">${escapeHtml(persona.name)}</span>
+                <span class="persona-card-arrow">▼</span>
+            </summary>
+            <div class="persona-card-content">
+                <div class="persona-meta">
+                    <div class="persona-meta-item">
+                        <span class="persona-meta-label">말투 / 분위기</span>
+                        <div class="persona-meta-value">${escapeHtml(tone)}</div>
+                    </div>
+                    <div class="persona-meta-item">
+                        <span class="persona-meta-label">AI 반응 스타일</span>
+                        <div class="persona-meta-value">${escapeHtml(style).replace(/\n/g, "<br>")}</div>
+                    </div>
+                </div>
+                <div class="persona-card-actions">
+                    <button type="button" class="persona-delete-btn" onclick="deletePersona(this)">삭제</button>
+                </div>
+            </div>
+        </details>
+    `;
+
+    personaList.prepend(card);
+}
+
+function renderPersonaEmpty() {
+    const personaList = document.getElementById("persona-list");
+    if (!personaList) {
+        return;
+    }
+
+    personaList.innerHTML = `
+        <div class="persona-empty">
+            아직 만든 페르소나가 없어요.<br>
+            왼쪽에서 첫 번째 페르소나를 만들어보세요.
+        </div>
+    `;
+}
+
+async function loadPersonaList() {
+    const personaList = document.getElementById("persona-list");
+    if (!personaList || typeof apiRequest !== "function") {
+        return;
+    }
+
+    try {
+        const personas = await apiRequest("/personas/", { method: "GET" });
+        personaList.innerHTML = "";
+
+        if (!personas.length) {
+            renderPersonaEmpty();
+            return;
+        }
+
+        personas.forEach((persona) => {
+            renderPersonaCard(persona);
+        });
+    } catch (_error) {
+        renderPersonaEmpty();
+    }
+}
+
+async function addPersona() {
+    const nameInput = document.getElementById("persona-name");
+    const toneInput = document.getElementById("persona-tone");
+    const styleInput = document.getElementById("persona-style");
+
+    if (!nameInput || !toneInput || !styleInput || typeof apiRequest !== "function") {
+        return;
+    }
+
+    const name = nameInput.value.trim();
+    const tone = toneInput.value.trim();
+    const style = styleInput.value.trim();
+
+    if (!name || !tone || !style) {
+        alert("모든 항목을 입력해주세요.");
+        return;
+    }
+
+    try {
+        const persona = await apiRequest("/personas/", {
+            method: "POST",
+            body: getJsonBody({
+                name,
+                preset_type: "custom",
+                custom_description: buildPersonaDescription(tone, style),
+            }),
+        });
+
+        const emptyBox = document.querySelector("#persona-list .persona-empty");
+        if (emptyBox) {
+            emptyBox.remove();
+        }
+
+        renderPersonaCard(persona);
+
+        nameInput.value = "";
+        toneInput.value = "";
+        styleInput.value = "";
+    } catch (error) {
+        alert(error.message || "페르소나 저장에 실패했어요.");
+    }
+}
+
+async function deletePersona(button) {
+    const card = button.closest(".persona-card");
+    const personaList = document.getElementById("persona-list");
+    const personaId = card?.dataset.personaId;
+
+    if (!card || !personaList || !personaId || typeof apiRequest !== "function") {
+        return;
+    }
+
+    try {
+        await apiRequest(`/personas/${encodeURIComponent(personaId)}`, {
+            method: "DELETE",
+        });
+
+        card.remove();
+
+        if (!personaList.querySelector(".persona-card")) {
+            renderPersonaEmpty();
+        }
+    } catch (error) {
+        alert(error.message || "페르소나 삭제에 실패했어요.");
+    }
+}
+
+function initPersonaPage() {
+    if (!document.getElementById("persona-list")) {
+        return;
+    }
+
+    loadPersonaList();
+}
+
 /* =========================
    my-diary.html Events
 ========================= */
@@ -552,6 +1019,7 @@ window.addEventListener("resize", () => {
 
 window.addEventListener("DOMContentLoaded", () => {
     disableAutocompleteOutsideLogin();
+    initPersonaPage();
     initProfilePage();
 
     const shelfWrapper = document.querySelector(".diary-shelf-wrapper");

@@ -20,12 +20,17 @@
 </head>
 <body class="page-persona min-h-screen relative font-kr">
 
-    <a href="index.html" class="absolute top-8 left-8 text-[#E8D8C4] flex items-center gap-2 hover:opacity-70 transition-opacity z-50">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        <span class="tracking-widest text-sm uppercase">Back to Home</span>
-    </a>
+    <!-- 호버 트리거 영역 -->
+    <div class="absolute top-0 left-0 w-full h-16 z-30 peer"></div>
+
+    <!-- 드롭다운 네비게이션 -->
+    <nav class="absolute top-0 left-0 w-full text-[#E8D8C4] shadow-2xl z-40 transform -translate-y-full transition-transform duration-500 ease-in-out peer-hover:translate-y-0 hover:translate-y-0 border-b border-[#C7B7A3]/20" style="background-color: var(--nav-bg);">
+        <div class="w-full max-w-7xl mx-auto flex justify-between items-center px-8 md:px-16 py-6 font-kr">
+            <a href="index.html"   class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300">메인으로</a>
+            <a href="profile.html" class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300">내 프로필</a>
+            <a href="my-diary.html" class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300">나의 일기장</a>
+        </div>
+    </nav>
 
     <main class="min-h-screen px-6 py-24 md:px-10 lg:px-16">
         <div class="max-w-7xl mx-auto">
@@ -68,16 +73,6 @@
                         </div>
 
                         <div>
-                            <label class="persona-label">한 줄 소개</label>
-                            <input
-                                id="persona-summary"
-                                type="text"
-                                class="persona-input"
-                                placeholder="예: 하루를 따뜻하게 정리해주는 선생님 같은 AI"
-                            >
-                        </div>
-
-                        <div>
                             <label class="persona-label">말투 / 분위기</label>
                             <input
                                 id="persona-tone"
@@ -93,15 +88,6 @@
                                 id="persona-style"
                                 class="persona-textarea"
                                 placeholder="예: 일기 내용을 짧게 정리한 뒤, 오늘의 감정을 공감하고 마지막에 따뜻한 한마디를 남겨줘."
-                            ></textarea>
-                        </div>
-
-                        <div>
-                            <label class="persona-label">자주 쓰는 표현</label>
-                            <textarea
-                                id="persona-expression"
-                                class="persona-textarea"
-                                placeholder="예: 오늘도 정말 수고했어요. / 네 마음이 잘 전해졌어요. / 내일은 더 가볍게 시작해봐요."
                             ></textarea>
                         </div>
 

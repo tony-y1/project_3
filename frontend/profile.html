@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>&#45236; &#54532;&#47196;&#54596; - "&#54616;&#47336;" commit()</title>
+    <title>내 프로필 - "하루" commit()</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -16,147 +16,227 @@
 <body class="page-profile min-h-screen font-kr relative">
     <div class="absolute top-0 left-0 w-full h-16 z-30 peer"></div>
 
+    <!-- 네비게이션: 로그아웃 → AI 페르소나 관리 링크로 변경 -->
     <nav class="absolute top-0 left-0 w-full text-[#E8D8C4] shadow-2xl z-40 transform -translate-y-full transition-transform duration-500 ease-in-out peer-hover:translate-y-0 hover:translate-y-0 border-b border-[#C7B7A3]/20" style="background-color: var(--nav-bg);">
         <div class="w-full max-w-7xl mx-auto flex justify-between items-center px-8 md:px-16 py-6 font-kr">
-            <a href="index.html" class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300">&#47700;&#51064;&#51004;&#47196;</a>
-            <a href="my-diary.html" class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300">&#45208;&#51032; &#51068;&#44592;&#51109;</a>
-            <button id="profile-logout-button" type="button" class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300 bg-transparent border-0 text-[#E8D8C4]">&#47196;&#44536;&#50500;&#50883;</button>
+            <a href="index.html"      class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300">메인으로</a>
+            <a href="my-diary.html"   class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300">나의 일기장</a>
+            <a href="ai-persona.html" class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300">AI 페르소나 관리</a>
         </div>
     </nav>
 
     <main class="min-h-screen px-6 py-16 md:px-10 lg:px-16">
         <div class="profile-shell">
+
+            <!-- 헤더 -->
             <section class="profile-hero">
                 <p class="font-script text-2xl md:text-3xl text-[#E8D8C4]/85 mb-3">My profile</p>
-                <h1 class="text-3xl md:text-5xl tracking-tight text-[#E8D8C4] font-semibold mb-4">&#45236; &#54532;&#47196;&#54596;</h1>
+                <h1 class="text-3xl md:text-5xl tracking-tight text-[#E8D8C4] font-semibold mb-4">내 프로필</h1>
                 <div class="profile-hero-line"></div>
-                <p class="profile-hero-copy">
-                    &#45804;&#47141;&#44284; &#50508;&#46988;&#51012; &#53485;&#50640;&#49436; &#45208;&#45576;&#49436; &#44288;&#47532;&#54624; &#49688; &#51080;&#50612;&#50836;.
-                </p>
             </section>
 
-            <section class="profile-tabs-card">
-                <div class="profile-tabs">
-                    <button id="profile-tab-calendar" type="button" class="profile-tab-button is-active" data-tab-target="calendar">
-                        &#45804;&#47141;
-                    </button>
-                    <button id="profile-tab-alarm" type="button" class="profile-tab-button" data-tab-target="alarm">
-                        &#50508;&#46988;
-                    </button>
-                </div>
+            <!-- 사이드바 + 메인 콘텐츠 래퍼 -->
+            <div class="profile-body-layout">
 
-                <div id="profile-panel-calendar" class="profile-tab-panel">
-                    <section class="profile-calendar-card">
-                        <div class="profile-calendar-header">
-                            <button id="profile-calendar-prev" type="button" class="profile-calendar-nav">&#51060;&#51204;</button>
-                            <div>
-                                <p class="profile-calendar-caption">Diary calendar</p>
-                                <h2 id="profile-calendar-title" class="profile-calendar-title">2026&#45380; 3&#50900;</h2>
-                            </div>
-                            <button id="profile-calendar-next" type="button" class="profile-calendar-nav">&#45796;&#51020;</button>
+                <!-- ─── 왼쪽 사이드바 ─── -->
+                <aside class="profile-sidebar-card">
+
+                    <!-- 1. 프로필 사진 + 2. 닉네임 -->
+                    <div class="profile-sid-identity">
+                        <!-- 아바타 -->
+                        <div class="profile-sid-avatar">
+                            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="profile-sid-avatar-icon" id="profile-avatar-icon">
+                                <circle cx="24" cy="18" r="9" fill="currentColor" opacity="0.55"/>
+                                <path d="M6 42c0-9.941 8.059-18 18-18s18 8.059 18 18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
+                            </svg>
+                            <img id="profile-avatar-img" class="profile-sid-avatar-img hidden" alt="프로필 사진">
+                        </div>
+                        <!-- 닉네임 -->
+                        <div class="profile-sid-nickname-wrap">
+                            <p class="profile-sid-nickname-label">닉네임</p>
+                            <p class="profile-sid-nickname" id="profile-nickname">—</p>
+                        </div>
+                    </div>
+
+                    <div class="profile-sid-divider"></div>
+
+                    <!-- 이번달 출석 통계 -->
+                    <div class="profile-sid-stats">
+                        <p class="profile-sid-stats-label">이번달 출석 일수</p>
+                        <p class="profile-sid-stats-message" id="profile-attendance-message">집계 중…</p>
+                    </div>
+
+                    <!-- 로그아웃 버튼 -->
+                    <button id="profile-logout-button" type="button" class="profile-sid-logout">
+                        로그아웃
+                    </button>
+
+                </aside>
+
+                <!-- ─── 오른쪽 메인 콘텐츠 ─── -->
+                <div class="profile-main-content">
+                    <section class="profile-tabs-card">
+                        <div class="profile-tabs">
+                            <button id="profile-tab-calendar" type="button" class="profile-tab-button is-active" data-tab-target="calendar">달력</button>
+                            <button id="profile-tab-alarm"    type="button" class="profile-tab-button"           data-tab-target="alarm">알람</button>
                         </div>
 
-                        <div class="profile-calendar-weekdays">
-                            <span>&#51068;</span>
-                            <span>&#50900;</span>
-                            <span>&#54868;</span>
-                            <span>&#49688;</span>
-                            <span>&#47785;</span>
-                            <span>&#44552;</span>
-                            <span>&#53664;</span>
+                        <!-- 달력 패널 -->
+                        <div id="profile-panel-calendar" class="profile-tab-panel">
+                            <section class="profile-calendar-card">
+                                <div class="profile-calendar-header">
+                                    <div>
+                                        <p class="profile-calendar-caption">Diary calendar</p>
+                                        <div class="profile-calendar-selects">
+                                            <select id="profile-calendar-year"  class="profile-calendar-select"></select>
+                                            <select id="profile-calendar-month" class="profile-calendar-select"></select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="profile-calendar-weekdays">
+                                    <span>일</span><span>월</span><span>화</span>
+                                    <span>수</span><span>목</span><span>금</span><span>토</span>
+                                </div>
+
+                                <div id="profile-calendar-grid" class="profile-calendar-grid"></div>
+
+                                <div class="profile-calendar-legend">
+                                    <span class="profile-legend-dot"></span>
+                                    <span>일기 작성 완료</span>
+                                </div>
+                            </section>
                         </div>
 
-                        <div id="profile-calendar-grid" class="profile-calendar-grid"></div>
+                        <!-- 알람 패널 -->
+                        <div id="profile-panel-alarm" class="profile-tab-panel hidden">
+                            <section class="profile-alarm-card">
+                                <div class="profile-alarm-header">
+                                    <div>
+                                        <p class="profile-calendar-caption">Alarm settings</p>
+                                        <h2 class="profile-calendar-title">알람 설정</h2>
+                                    </div>
+                                    <button id="profile-alarm-save" type="button" class="profile-calendar-nav">저장</button>
+                                </div>
 
-                        <div class="profile-calendar-legend">
-                            <span class="profile-legend-dot"></span>
-                            <span>&#51068;&#44592; &#51089;&#49457; &#50756;&#47308;</span>
+                                <p class="profile-alarm-copy">요일별로 원하는 시간을 정하고 알람을 켤 수 있어요.</p>
+
+                                <div class="profile-alarm-list">
+                                    <div class="profile-alarm-row" data-day="sun">
+                                        <span class="profile-alarm-day">일요일</span>
+                                        <label class="profile-alarm-switch"><input type="checkbox" class="profile-alarm-enabled"><span class="profile-alarm-switch-ui"></span></label>
+                                        <input type="time" class="profile-alarm-time" value="08:00">
+                                    </div>
+                                    <div class="profile-alarm-row" data-day="mon">
+                                        <span class="profile-alarm-day">월요일</span>
+                                        <label class="profile-alarm-switch"><input type="checkbox" class="profile-alarm-enabled"><span class="profile-alarm-switch-ui"></span></label>
+                                        <input type="time" class="profile-alarm-time" value="08:00">
+                                    </div>
+                                    <div class="profile-alarm-row" data-day="tue">
+                                        <span class="profile-alarm-day">화요일</span>
+                                        <label class="profile-alarm-switch"><input type="checkbox" class="profile-alarm-enabled"><span class="profile-alarm-switch-ui"></span></label>
+                                        <input type="time" class="profile-alarm-time" value="08:00">
+                                    </div>
+                                    <div class="profile-alarm-row" data-day="wed">
+                                        <span class="profile-alarm-day">수요일</span>
+                                        <label class="profile-alarm-switch"><input type="checkbox" class="profile-alarm-enabled"><span class="profile-alarm-switch-ui"></span></label>
+                                        <input type="time" class="profile-alarm-time" value="08:00">
+                                    </div>
+                                    <div class="profile-alarm-row" data-day="thu">
+                                        <span class="profile-alarm-day">목요일</span>
+                                        <label class="profile-alarm-switch"><input type="checkbox" class="profile-alarm-enabled"><span class="profile-alarm-switch-ui"></span></label>
+                                        <input type="time" class="profile-alarm-time" value="08:00">
+                                    </div>
+                                    <div class="profile-alarm-row" data-day="fri">
+                                        <span class="profile-alarm-day">금요일</span>
+                                        <label class="profile-alarm-switch"><input type="checkbox" class="profile-alarm-enabled"><span class="profile-alarm-switch-ui"></span></label>
+                                        <input type="time" class="profile-alarm-time" value="08:00">
+                                    </div>
+                                    <div class="profile-alarm-row" data-day="sat">
+                                        <span class="profile-alarm-day">토요일</span>
+                                        <label class="profile-alarm-switch"><input type="checkbox" class="profile-alarm-enabled"><span class="profile-alarm-switch-ui"></span></label>
+                                        <input type="time" class="profile-alarm-time" value="08:00">
+                                    </div>
+                                </div>
+
+                                <p id="profile-alarm-message" class="profile-alarm-message hidden"></p>
+                            </section>
                         </div>
                     </section>
-                </div>
+                </div><!-- /profile-main-content -->
 
-                <div id="profile-panel-alarm" class="profile-tab-panel hidden">
-                    <section class="profile-alarm-card">
-                        <div class="profile-alarm-header">
-                            <div>
-                                <p class="profile-calendar-caption">Alarm settings</p>
-                                <h2 class="profile-calendar-title">&#50508;&#46988; &#49444;&#51221;</h2>
-                            </div>
-                            <button id="profile-alarm-save" type="button" class="profile-calendar-nav">&#51200;&#51109;</button>
-                        </div>
-
-                        <p class="profile-alarm-copy">
-                            &#50836;&#51068;&#48324;&#47196; &#50896;&#54616;&#45716; &#49884;&#44036;&#51012; &#51221;&#54616;&#44256; &#50508;&#46988;&#51012; &#52940; &#49688; &#51080;&#50612;&#50836;.
-                        </p>
-
-                        <div class="profile-alarm-list">
-                            <div class="profile-alarm-row" data-day="sun">
-                                <span class="profile-alarm-day">&#51068;&#50836;&#51068;</span>
-                                <label class="profile-alarm-switch">
-                                    <input type="checkbox" class="profile-alarm-enabled">
-                                    <span class="profile-alarm-switch-ui"></span>
-                                </label>
-                                <input type="time" class="profile-alarm-time" value="08:00">
-                            </div>
-                            <div class="profile-alarm-row" data-day="mon">
-                                <span class="profile-alarm-day">&#50900;&#50836;&#51068;</span>
-                                <label class="profile-alarm-switch">
-                                    <input type="checkbox" class="profile-alarm-enabled">
-                                    <span class="profile-alarm-switch-ui"></span>
-                                </label>
-                                <input type="time" class="profile-alarm-time" value="08:00">
-                            </div>
-                            <div class="profile-alarm-row" data-day="tue">
-                                <span class="profile-alarm-day">&#54868;&#50836;&#51068;</span>
-                                <label class="profile-alarm-switch">
-                                    <input type="checkbox" class="profile-alarm-enabled">
-                                    <span class="profile-alarm-switch-ui"></span>
-                                </label>
-                                <input type="time" class="profile-alarm-time" value="08:00">
-                            </div>
-                            <div class="profile-alarm-row" data-day="wed">
-                                <span class="profile-alarm-day">&#49688;&#50836;&#51068;</span>
-                                <label class="profile-alarm-switch">
-                                    <input type="checkbox" class="profile-alarm-enabled">
-                                    <span class="profile-alarm-switch-ui"></span>
-                                </label>
-                                <input type="time" class="profile-alarm-time" value="08:00">
-                            </div>
-                            <div class="profile-alarm-row" data-day="thu">
-                                <span class="profile-alarm-day">&#47785;&#50836;&#51068;</span>
-                                <label class="profile-alarm-switch">
-                                    <input type="checkbox" class="profile-alarm-enabled">
-                                    <span class="profile-alarm-switch-ui"></span>
-                                </label>
-                                <input type="time" class="profile-alarm-time" value="08:00">
-                            </div>
-                            <div class="profile-alarm-row" data-day="fri">
-                                <span class="profile-alarm-day">&#44552;&#50836;&#51068;</span>
-                                <label class="profile-alarm-switch">
-                                    <input type="checkbox" class="profile-alarm-enabled">
-                                    <span class="profile-alarm-switch-ui"></span>
-                                </label>
-                                <input type="time" class="profile-alarm-time" value="08:00">
-                            </div>
-                            <div class="profile-alarm-row" data-day="sat">
-                                <span class="profile-alarm-day">&#53664;&#50836;&#51068;</span>
-                                <label class="profile-alarm-switch">
-                                    <input type="checkbox" class="profile-alarm-enabled">
-                                    <span class="profile-alarm-switch-ui"></span>
-                                </label>
-                                <input type="time" class="profile-alarm-time" value="08:00">
-                            </div>
-                        </div>
-
-                        <p id="profile-alarm-message" class="profile-alarm-message hidden"></p>
-                    </section>
-                </div>
-            </section>
-        </div>
+            </div><!-- /profile-body-layout -->
+        </div><!-- /profile-shell -->
     </main>
 
     <script src="js/api.js"></script>
     <script src="js/frontend.js"></script>
     <script src="js/auth.js"></script>
+
+    <!-- 닉네임 주입 + 출석 통계 -->
+    <script>
+    (function () {
+
+        /* ── 닉네임 ── */
+        function fillNickname() {
+            var el = document.getElementById("profile-nickname");
+            if (!el) return;
+            try {
+                var raw  = localStorage.getItem("auth_user");
+                var user = raw ? JSON.parse(raw) : null;
+                var name = user && user.nickname ? user.nickname.trim() : "";
+                el.textContent = name || "—";
+            } catch (_) {
+                el.textContent = "—";
+            }
+        }
+
+        /* ── 이번달 출석 통계 ── */
+        function renderAttendance() {
+            var el = document.getElementById("profile-attendance-message");
+            if (!el) return;
+
+            var today     = new Date();
+            var year      = today.getFullYear();
+            var month     = today.getMonth();
+            var todayDate = today.getDate();
+            var missed    = 0;
+
+            for (var d = 1; d <= todayDate; d++) {
+                var key =
+                    year + "-" +
+                    String(month + 1).padStart(2, "0") + "-" +
+                    String(d).padStart(2, "0");
+
+                if (typeof profileDiaryDates === "undefined" || !profileDiaryDates.has(key)) {
+                    missed++;
+                }
+            }
+
+            if (missed === 0) {
+                el.textContent = "이번달은 하루도 빠짐없이 일기를 썼어요! 🎉";
+                el.classList.add("is-perfect");
+            } else {
+                el.textContent = "이번달에는 " + missed + "일 일기작성을 못했어요!!";
+            }
+        }
+
+        /* profileDiaryDates 는 initProfilePage(비동기)가 완료된 뒤 세팅되므로 polling */
+        function waitAndRender(tries) {
+            if (tries <= 0) { renderAttendance(); return; }
+            if (typeof profileDiaryDates !== "undefined") {
+                renderAttendance();
+            } else {
+                setTimeout(function () { waitAndRender(tries - 1); }, 350);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            fillNickname();
+            /* API 응답 후 약 1 s 뒤부터 최대 7 초 polling */
+            setTimeout(function () { waitAndRender(20); }, 1000);
+        });
+    })();
+    </script>
 </body>
 </html>
