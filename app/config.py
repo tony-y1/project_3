@@ -21,8 +21,7 @@ class Settings(BaseSettings):
     # Azure Speech
     AZURE_SPEECH_KEY: str = ""
     AZURE_SPEECH_REGION: str = "koreacentral" 
-    #Google cloud
-    GOOGLE_APPLICATION_CREDENTIALS: str = ""
+   
 
     class Config:
         env_file = ".env"
