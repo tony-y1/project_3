@@ -110,7 +110,7 @@ async function handleDiaryCreateSubmit(event) {
     saveButton.textContent = "저장 중...";
 
     try {
-        await createDiary({
+        const diary = await createDiary({
             title: title || null,
             emotion: emotion || null,
             weather: weather || null,
@@ -120,8 +120,8 @@ async function handleDiaryCreateSubmit(event) {
             hashtags: [],
             persona_id: null,
         });
+        window.location.href = `diary_read.html?id=${encodeURIComponent(diary.id)}`;
 
-        window.location.href = "my-diary.html";
     } catch (error) {
         window.alert(error.message || "일기 저장에 실패했어요.");
     } finally {

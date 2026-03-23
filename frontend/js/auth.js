@@ -46,6 +46,15 @@ function clearAuth() {
     localStorage.removeItem(AUTH_USER_KEY);
 }
 
+function getAuthUser() {
+    try {
+        const raw = localStorage.getItem(AUTH_USER_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch (_error) {
+        return null;
+    }
+}
+
 function resetAuthOnFirstVisit() {
     if (sessionStorage.getItem(AUTH_BOOTSTRAP_KEY)) {
         return;
@@ -69,6 +78,18 @@ async function logout() {
     }
 }
 
+function initProfileLogout() {
+    const logoutButton = document.getElementById("profile-logout-button");
+    if (!logoutButton) {
+        return;
+    }
+
+    logoutButton.addEventListener("click", async () => {
+        await logout();
+        window.location.href = "index.html";
+    });
+}
+
 function requireAuth() {
     if (!getAccessToken()) {
         window.location.href = "login.html";
@@ -85,18 +106,30 @@ function initAuthNav() {
     }
 
     if (getAccessToken()) {
-        authLink.textContent = "로그아웃";
-        authLink.href = "#";
-        authLink.addEventListener("click", async (event) => {
-            event.preventDefault();
-            await logout();
-            window.location.href = "index.html";
-        });
+        authLink.textContent = "내 프로필";
+        authLink.href = "profile.html";
         return;
     }
 
     authLink.textContent = "로그인/회원가입";
     authLink.href = "login.html";
+}
+
+function initIndexGreeting() {
+    const greeting = document.getElementById("index-user-greeting");
+    if (!greeting || !getAccessToken()) {
+        return;
+    }
+
+    const user = getAuthUser();
+    const nickname = user?.nickname?.trim();
+
+    if (!nickname) {
+        return;
+    }
+
+    greeting.textContent = `안녕하세요 ${nickname}님!\n오늘 하루를 남겨보세요!`;
+    greeting.classList.remove("hidden");
 }
 
 function checkPasswordMatch() {
@@ -169,7 +202,7 @@ async function handleLoginSubmit(event) {
         saveAuth(result.access_token, result.user);
         setMessage(message, "Login successful. Redirecting...");
         window.setTimeout(() => {
-            window.location.href = "index.html";
+            window.location.href = "profile.html";
         }, 500);
     } catch (error) {
         setMessage(message, error.message || "Login failed.", true);
@@ -238,7 +271,7 @@ function initLoginPage() {
     }
 
     if (getAccessToken()) {
-        window.location.href = "index.html";
+        window.location.href = "profile.html";
         return;
     }
 
@@ -254,7 +287,11 @@ function initProtectedPage() {
         return;
     }
 
-    if (body.classList.contains("page-diary") || body.classList.contains("page-persona")) {
+    if (
+        body.classList.contains("page-diary") ||
+        body.classList.contains("page-persona") ||
+        body.classList.contains("page-profile")
+    ) {
         requireAuth();
     }
 }
@@ -262,6 +299,8 @@ function initProtectedPage() {
 document.addEventListener("DOMContentLoaded", () => {
     resetAuthOnFirstVisit();
     initAuthNav();
+    initIndexGreeting();
+    initProfileLogout();
     initLoginPage();
     initProtectedPage();
 });
