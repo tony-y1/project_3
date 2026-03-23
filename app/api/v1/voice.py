@@ -11,7 +11,11 @@ from pydantic import BaseModel
 from app.services.stt_service import stt_service
 from app.services.tts_service import tts_service
 from app.services.gpt_service import gpt_service
+from app.services.redis_service import get_tts_stats
+from app.config import get_settings
 import logging
+
+settings = get_settings()
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +84,14 @@ async def stream_feedback_tts(request: StreamFeedbackRequest):
         media_type="audio/mpeg",
         headers={"X-Content-Type-Options": "nosniff"},
     )
+
+# ── TTS 캐시 통계 ─────────────────────────────────────────
+@router.get("/tts/stats")
+async def tts_cache_stats():
+    if not settings.USE_REDIS:
+        return {"message": "Redis 비활성화 상태 (USE_REDIS=False)"}
+    return await get_tts_stats()
+
 
 # ── WebSocket STT: 실시간 스트리밍 ───────────────────────
 @router.websocket("/ws/stt")
