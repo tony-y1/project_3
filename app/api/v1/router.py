@@ -11,5 +11,5 @@ api_router.include_router(voice.router,    prefix="/voice",    tags=["Voice"])  
 api_router.include_router(alarm.router,    prefix="/alarms",   tags=["Alarm"])       # C팀원
 
 # 여유 시 구현 예정
-# from app.api.v1 import search
-# api_router.include_router(search.router, prefix="/search", tags=["AI Search"])
+from app.api.v1 import search
+api_router.include_router(search.router, prefix="/search", tags=["AI Search"])
