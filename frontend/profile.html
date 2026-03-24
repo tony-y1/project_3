@@ -33,6 +33,7 @@
                 <p class="font-script text-2xl md:text-3xl text-[#E8D8C4]/85 mb-3">My profile</p>
                 <h1 class="text-3xl md:text-5xl tracking-tight text-[#E8D8C4] font-semibold mb-4">내 프로필</h1>
                 <div class="profile-hero-line"></div>
+                <p class="profile-hero-copy">달력과 알람을 탭에서 나눠서 관리할 수 있어요.</p>
             </section>
 
             <!-- 사이드바 + 메인 콘텐츠 래퍼 -->
@@ -200,7 +201,7 @@
             var year      = today.getFullYear();
             var month     = today.getMonth();
             var todayDate = today.getDate();
-            var missed    = 0;
+            var written   = 0;
 
             for (var d = 1; d <= todayDate; d++) {
                 var key =
@@ -208,16 +209,18 @@
                     String(month + 1).padStart(2, "0") + "-" +
                     String(d).padStart(2, "0");
 
-                if (typeof profileDiaryDates === "undefined" || !profileDiaryDates.has(key)) {
-                    missed++;
+                if (typeof profileDiaryDates !== "undefined" && profileDiaryDates.has(key)) {
+                    written++;
                 }
             }
 
-            if (missed === 0) {
+            if (written === todayDate) {
                 el.textContent = "이번달은 하루도 빠짐없이 일기를 썼어요! 🎉";
                 el.classList.add("is-perfect");
+            } else if (written === 0) {
+                el.textContent = "아직 이번달 일기를 작성하지 않았어요.";
             } else {
-                el.textContent = "이번달에는 " + missed + "일 일기작성을 못했어요!!";
+                el.textContent = "이번달에는 " + written + "일이나 일기를 작성했어요!!";
             }
         }
 
