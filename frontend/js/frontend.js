@@ -1,581 +1,20 @@
-/* =========================
-   Common
-========================= */
-function escapeHtml(text) {
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function formatDiaryDate(dateString) {
-    const date = new Date(dateString);
-    if (Number.isNaN(date.getTime())) return dateString;
-
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}.${month}.${day}`;
-}
-
-function disableAutocompleteOutsideLogin() {
-    const body = document.body;
-    if (!body || body.classList.contains("page-login")) {
-        return;
-    }
-
-    document.querySelectorAll("form").forEach((form) => {
-        form.setAttribute("autocomplete", "off");
-    });
-
-    document.querySelectorAll("input, textarea").forEach((field) => {
-        const type = (field.getAttribute("type") || "").toLowerCase();
-        if (["hidden", "checkbox", "radio", "button", "submit"].includes(type)) {
-            return;
-        }
-
-        field.setAttribute("autocomplete", "off");
-        field.setAttribute("autocorrect", "off");
-        field.setAttribute("autocapitalize", "off");
-        field.setAttribute("spellcheck", "false");
-    });
-}
-
-/* =========================
-   login.html
-========================= */
-function toggleForm(type) {
-    const loginForm = document.getElementById("login-form");
-    const signupForm = document.getElementById("signup-form");
-
-    if (!loginForm || !signupForm) {
-        return;
-    }
-
-    if (type === "signup") {
-        loginForm.classList.add("hidden-form");
-        signupForm.classList.remove("hidden-form");
-    } else {
-        signupForm.classList.add("hidden-form");
-        loginForm.classList.remove("hidden-form");
-    }
-}
-
-/* =========================
-   ai-persona.html
-========================= */
-function addPersona() {
-    const nameInput = document.getElementById("persona-name");
-    const summaryInput = document.getElementById("persona-summary");
-    const toneInput = document.getElementById("persona-tone");
-    const styleInput = document.getElementById("persona-style");
-    const expressionInput = document.getElementById("persona-expression");
-    const personaList = document.getElementById("persona-list");
-
-    if (!nameInput || !summaryInput || !toneInput || !styleInput || !expressionInput || !personaList) {
-        return;
-    }
-
-    const name = nameInput.value.trim();
-    const summary = summaryInput.value.trim();
-    const tone = toneInput.value.trim();
-    const style = styleInput.value.trim();
-    const expression = expressionInput.value.trim();
-
-    if (!name || !summary || !tone || !style || !expression) {
-        alert("모든 항목을 입력해주세요.");
-        return;
-    }
-
-    const emptyBox = personaList.querySelector(".persona-empty");
-    if (emptyBox) {
-        emptyBox.remove();
-    }
-
-    const card = document.createElement("div");
-    card.className = "persona-card";
-
-    card.innerHTML = `
-        <div class="persona-card-header">
-            <div>
-                <div class="persona-card-title">${escapeHtml(name)}</div>
-                <div class="persona-card-summary">${escapeHtml(summary)}</div>
-            </div>
-            <button type="button" class="persona-delete-btn" onclick="deletePersona(this)">삭제</button>
-        </div>
-
-        <div class="mb-4">
-            <span class="persona-badge">Persona</span>
-        </div>
-
-        <div class="persona-meta">
-            <div class="persona-meta-item">
-                <span class="persona-meta-label">말투 / 분위기</span>
-                <div class="persona-meta-value">${escapeHtml(tone)}</div>
-            </div>
-
-            <div class="persona-meta-item">
-                <span class="persona-meta-label">AI 반응 스타일</span>
-                <div class="persona-meta-value">${escapeHtml(style).replace(/\n/g, "<br>")}</div>
-            </div>
-
-            <div class="persona-meta-item">
-                <span class="persona-meta-label">자주 쓰는 표현</span>
-                <div class="persona-meta-value">${escapeHtml(expression).replace(/\n/g, "<br>")}</div>
-            </div>
-        </div>
-    `;
-
-    personaList.prepend(card);
-
-    nameInput.value = "";
-    summaryInput.value = "";
-    toneInput.value = "";
-    styleInput.value = "";
-    expressionInput.value = "";
-}
-
-function deletePersona(button) {
-    const card = button.closest(".persona-card");
-    const personaList = document.getElementById("persona-list");
-
-    if (!card || !personaList) {
-        return;
-    }
-
-    card.remove();
-
-    const cards = personaList.querySelectorAll(".persona-card");
-    if (cards.length === 0) {
-        personaList.innerHTML = `
-            <div class="persona-empty">
-                아직 만든 페르소나가 없어요.<br>
-                왼쪽에서 첫 번째 페르소나를 만들어보세요.
-            </div>
-        `;
-    }
-}
-
-/* =========================
-   my-diary.html
-========================= */
-let diaryShelfIndex = 0;
-
-function openDiaryModal() {
-    const modal = document.getElementById("diary-modal");
-    if (!modal) return;
-    modal.classList.remove("hidden");
-}
-
-function closeDiaryModal() {
-    const modal = document.getElementById("diary-modal");
-    if (!modal) return;
-    modal.classList.add("hidden");
-}
-
-function openSearchModal() {
-    const modal = document.getElementById("search-modal");
-    if (!modal) return;
-    modal.classList.remove("hidden");
-}
-
-function closeSearchModal() {
-    const modal = document.getElementById("search-modal");
-    if (!modal) return;
-    modal.classList.add("hidden");
-}
-
-function saveDiaryEntry() {
-    const dateInput = document.getElementById("diary-date");
-    const titleInput = document.getElementById("diary-title");
-    const contentInput = document.getElementById("diary-content");
-    const shelf = document.getElementById("diary-shelf");
-    const emptyState = document.getElementById("diary-empty-state");
-
-    if (!dateInput || !titleInput || !contentInput || !shelf) return;
-
-    const date = dateInput.value.trim();
-    const title = titleInput.value.trim();
-    const content = contentInput.value.trim();
-
-    if (!date || !title || !content) {
-        alert("날짜, 제목, 일기 내용을 모두 입력해주세요.");
-        return;
-    }
-
-    if (emptyState) {
-        emptyState.remove();
-    }
-
-    const book = document.createElement("div");
-    book.className = "diary-book";
-
-    book.innerHTML = `
-        <div class="diary-book-inner">
-            <div class="diary-book-date">${escapeHtml(formatDiaryDate(date))}</div>
-            <div class="diary-book-title">${escapeHtml(title)}</div>
-
-            <div class="diary-book-footer">
-                <button type="button" class="diary-book-delete" onclick="deleteDiaryBook(this)">삭제</button>
-            </div>
-        </div>
-    `;
-
-    shelf.prepend(book);
-
-    dateInput.value = "";
-    titleInput.value = "";
-    contentInput.value = "";
-
-    diaryShelfIndex = 0;
-    updateDiaryShelfPosition();
-    renderDiaryProgress();
-    closeDiaryModal();
-}
-
-function deleteDiaryBook(button) {
-    if (!confirm("삭제하시겠습니까?")) {
-        return;
-    }
-
-    const book = button.closest(".diary-book");
-    const shelf = document.getElementById("diary-shelf");
-
-    if (!book || !shelf) return;
-
-    book.remove();
-
-    const remainingBooks = shelf.querySelectorAll(".diary-book");
-    if (remainingBooks.length === 0) {
-        shelf.innerHTML = `
-            <div class="diary-empty-book" id="diary-empty-state">
-                아직 저장된 일기가 없어요.<br>
-                첫 번째 하루를 책으로 만들어보세요.
-            </div>
-        `;
-        diaryShelfIndex = 0;
-    } else {
-        const maxIndex = Math.max(0, remainingBooks.length - 1);
-        if (diaryShelfIndex > maxIndex) {
-            diaryShelfIndex = maxIndex;
-        }
-    }
-
-    updateDiaryShelfPosition();
-    renderDiaryProgress();
-}
-
-function moveDiaryShelf(direction) {
-    const shelf = document.getElementById("diary-shelf");
-    if (!shelf) return;
-
-    const books = shelf.querySelectorAll(".diary-book");
-    if (!books.length) return;
-
-    const maxIndex = Math.max(0, books.length - 1);
-    diaryShelfIndex += direction;
-
-    if (diaryShelfIndex < 0) diaryShelfIndex = 0;
-    if (diaryShelfIndex > maxIndex) diaryShelfIndex = maxIndex;
-
-    updateDiaryShelfPosition();
-    renderDiaryProgress();
-}
-
-function updateDiaryShelfPosition() {
-    const shelf = document.getElementById("diary-shelf");
-    if (!shelf) return;
-
-    const isMobile = window.innerWidth <= 768;
-    const step = isMobile ? 90 : 106;
-    const offset = diaryShelfIndex * step;
-
-    shelf.style.transform = `translateX(-${offset}px)`;
-}
-
-function renderDiaryProgress() {
-    const progress = document.getElementById("diary-progress");
-    const shelf = document.getElementById("diary-shelf");
-
-    if (!progress || !shelf) return;
-
-    const books = shelf.querySelectorAll(".diary-book");
-    progress.innerHTML = "";
-
-    if (!books.length) {
-        for (let i = 0; i < 18; i++) {
-            const dot = document.createElement("span");
-            dot.className = "diary-progress-dot";
-            progress.appendChild(dot);
-        }
-        return;
-    }
-
-    books.forEach((_, index) => {
-        const dot = document.createElement("span");
-        dot.className = "diary-progress-dot";
-
-        if (index === diaryShelfIndex) {
-            dot.classList.add("active");
-        }
-
-        progress.appendChild(dot);
-    });
-}
-
-function fakeDiarySearch() {
-    const input = document.getElementById("diary-search-input");
-    const result = document.getElementById("diary-search-result");
-
-    if (!input || !result) return;
-
-    const keyword = input.value.trim();
-
-    if (!keyword) {
-        alert("검색하고 싶은 내용을 입력해주세요.");
-        return;
-    }
-
-    result.innerHTML = `
-        "${escapeHtml(keyword)}"과 관련한 일기를 찾는 AI 검색 기능이 들어갈 자리예요.<br>
-        지금은 UI만 만든 상태이고, 나중에 키워드 일치 일기 내용이나 해당 날짜를 찾아주는 기능으로 연결하면 좋아요.
-    `;
-}
-
-/* =========================
-   profile.html
-========================= */
-let profileCalendarDate = new Date();
-let profileDiaryDates = new Set();
-const PROFILE_ALARM_STORAGE_KEY = "profile_alarm_settings";
-
-function formatProfileDateKey(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-}
-
-function renderProfileCalendar() {
-    const title = document.getElementById("profile-calendar-title");
-    const grid = document.getElementById("profile-calendar-grid");
-
-    if (!title || !grid) return;
-
-    const current = new Date(profileCalendarDate.getFullYear(), profileCalendarDate.getMonth(), 1);
-    const year = current.getFullYear();
-    const month = current.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-
-    title.textContent = `${year}년 ${month + 1}월`;
-    grid.innerHTML = "";
-
-    for (let i = 0; i < firstDay.getDay(); i++) {
-        const emptyCell = document.createElement("div");
-        emptyCell.className = "profile-calendar-cell is-empty";
-        grid.appendChild(emptyCell);
-    }
-
-    for (let day = 1; day <= lastDay.getDate(); day++) {
-        const cellDate = new Date(year, month, day);
-        const key = formatProfileDateKey(cellDate);
-        const hasDiary = profileDiaryDates.has(key);
-        const cell = document.createElement("div");
-
-        cell.className = `profile-calendar-cell${hasDiary ? " has-diary" : ""}`;
-        cell.innerHTML = `
-            <span class="profile-calendar-day">${day}</span>
-            ${hasDiary ? '<span class="profile-calendar-mark">작성 완료</span>' : ""}
-        `;
-
-        grid.appendChild(cell);
-    }
-}
-
-function showProfileTab(target) {
-    const tabButtons = document.querySelectorAll(".profile-tab-button");
-    const panels = document.querySelectorAll(".profile-tab-panel");
-
-    tabButtons.forEach((button) => {
-        button.classList.toggle("is-active", button.dataset.tabTarget === target);
-    });
-
-    panels.forEach((panel) => {
-        const isTarget = panel.id === `profile-panel-${target}`;
-        panel.classList.toggle("hidden", !isTarget);
-    });
-}
-
-function setProfileAlarmRowState(row, enabled) {
-    const timeInput = row.querySelector(".profile-alarm-time");
-    if (!timeInput) {
-        return;
-    }
-
-    row.classList.toggle("is-disabled", !enabled);
-    timeInput.disabled = !enabled;
-}
-
-function loadProfileAlarmSettings() {
-    try {
-        const raw = localStorage.getItem(PROFILE_ALARM_STORAGE_KEY);
-        return raw ? JSON.parse(raw) : {};
-    } catch (_error) {
-        return {};
-    }
-}
-
-function saveProfileAlarmSettings(settings) {
-    localStorage.setItem(PROFILE_ALARM_STORAGE_KEY, JSON.stringify(settings));
-}
-
-function initProfileTabs() {
-    const tabButtons = document.querySelectorAll(".profile-tab-button");
-    if (!tabButtons.length) {
-        return;
-    }
-
-    tabButtons.forEach((button) => {
-        button.addEventListener("click", () => {
-            showProfileTab(button.dataset.tabTarget);
-        });
-    });
-}
-
-function initProfileAlarmPage() {
-    const rows = document.querySelectorAll(".profile-alarm-row");
-    const saveButton = document.getElementById("profile-alarm-save");
-    const message = document.getElementById("profile-alarm-message");
-
-    if (!rows.length || !saveButton) {
-        return;
-    }
-
-    const settings = loadProfileAlarmSettings();
-
-    rows.forEach((row) => {
-        const day = row.dataset.day;
-        const enabledInput = row.querySelector(".profile-alarm-enabled");
-        const timeInput = row.querySelector(".profile-alarm-time");
-
-        if (!day || !enabledInput || !timeInput) {
-            return;
-        }
-
-        const saved = settings[day];
-        enabledInput.checked = Boolean(saved?.enabled);
-        timeInput.value = saved?.time || timeInput.value || "08:00";
-        setProfileAlarmRowState(row, enabledInput.checked);
-
-        enabledInput.addEventListener("change", () => {
-            setProfileAlarmRowState(row, enabledInput.checked);
-            if (message) {
-                message.classList.add("hidden");
-                message.textContent = "";
-            }
-        });
-    });
-
-    saveButton.addEventListener("click", () => {
-        const nextSettings = {};
-
-        rows.forEach((row) => {
-            const day = row.dataset.day;
-            const enabledInput = row.querySelector(".profile-alarm-enabled");
-            const timeInput = row.querySelector(".profile-alarm-time");
-
-            if (!day || !enabledInput || !timeInput) {
-                return;
-            }
-
-            nextSettings[day] = {
-                enabled: enabledInput.checked,
-                time: timeInput.value || "08:00",
-            };
-        });
-
-        saveProfileAlarmSettings(nextSettings);
-
-        if (message) {
-            message.textContent = "알람 설정이 저장되었어요.";
-            message.classList.remove("hidden");
-        }
-    });
-}
-
-async function initProfilePage() {
-    const grid = document.getElementById("profile-calendar-grid");
-    const prevButton = document.getElementById("profile-calendar-prev");
-    const nextButton = document.getElementById("profile-calendar-next");
-
-    initProfileTabs();
-    initProfileAlarmPage();
-
-    if (!grid || typeof apiRequest !== "function") {
-        return;
-    }
-
-    profileCalendarDate = new Date();
-    profileCalendarDate.setDate(1);
-
-    try {
-        const diaries = await apiRequest("/diaries/", { method: "GET" });
-        profileDiaryDates = new Set(
-            diaries
-                .map((diary) => diary.diary_date)
-                .filter(Boolean)
-        );
-    } catch (_error) {
-        profileDiaryDates = new Set();
-    }
-
-    renderProfileCalendar();
-
-    prevButton?.addEventListener("click", () => {
-        profileCalendarDate = new Date(profileCalendarDate.getFullYear(), profileCalendarDate.getMonth() - 1, 1);
-        renderProfileCalendar();
-    });
-
-    nextButton?.addEventListener("click", () => {
-        profileCalendarDate = new Date(profileCalendarDate.getFullYear(), profileCalendarDate.getMonth() + 1, 1);
-        renderProfileCalendar();
-    });
-}
-
-/* =========================
-   my-diary.html Events
-========================= */
-window.addEventListener("resize", () => {
-    updateDiaryShelfPosition();
-    renderDiaryProgress();
-});
-
-window.addEventListener("DOMContentLoaded", () => {
-    disableAutocompleteOutsideLogin();
-    initProfilePage();
-
-    const shelfWrapper = document.querySelector(".diary-shelf-wrapper");
-
-    if (shelfWrapper) {
-        shelfWrapper.addEventListener("wheel", (event) => {
-            const shelf = document.getElementById("diary-shelf");
-            if (!shelf) return;
-
-            const books = shelf.querySelectorAll(".diary-book");
-            if (!books.length) return;
-
-            event.preventDefault();
-
-            if (event.deltaY > 0) {
-                moveDiaryShelf(1);
-            } else {
-                moveDiaryShelf(-1);
-            }
-        }, { passive: false });
-    }
-
-    renderDiaryProgress();
-});
+const alarmTimeInput = document.getElementById("alarm-time");
+const saveAlarmBtn = document.getElementById("save-alarm-btn");
+const loadAlarmsBtn = document.getElementById("load-alarms-btn");
+const alarmListEl = document.getElementById("alarm-list");
+const alarmEnabledInput = document.getElementById("alarm-enabled");
+
+const dayCheckboxMap = {
+  MON: document.getElementById("day-mon"),
+  TUE: document.getElementById("day-tue"),
+  WED: document.getElementById("day-wed"),
+  THU: document.getElementById("day-thu"),
+  FRI: document.getElementById("day-fri"),
+  SAT: document.getElementById("day-sat"),
+  SUN: document.getElementById("day-sun"),
+};
+
+// 브라우저 알림 권한 요청
 async function requestAlarmNotificationPermission() {
   if (!("Notification" in window)) return;
 
@@ -588,12 +27,22 @@ async function requestAlarmNotificationPermission() {
   }
 }
 
+// localStorage에 저장된 access token 조회
 function getAccessToken() {
   return localStorage.getItem("access_token");
 }
 
+// 선택된 요일 목록 반환
+function getSelectedRepeatDays() {
+  return Object.entries(dayCheckboxMap)
+    .filter(([, checkbox]) => checkbox && checkbox.checked)
+    .map(([day]) => day);
+}
+
+// 이미 표시한 알림 중복 방지용 저장소
 const shownAlarmMap = new Map();
 
+// 일반 브라우저 알림 표시
 function showAlarmNotification(alarm) {
   if (!("Notification" in window)) return;
   if (Notification.permission !== "granted") return;
@@ -601,6 +50,7 @@ function showAlarmNotification(alarm) {
   const now = Date.now();
   const lastShownAt = shownAlarmMap.get(alarm.id);
 
+  // 1분 안에 같은 알람 다시 띄우지 않음
   if (lastShownAt && now - lastShownAt < 60000) {
     return;
   }
@@ -608,24 +58,225 @@ function showAlarmNotification(alarm) {
   shownAlarmMap.set(alarm.id, now);
 
   new Notification("말벗 알람", {
-    body: `설정한 알람 시간입니다. (${alarm.alarm_time})`
+    body: `설정한 알람 시간입니다. (${alarm.alarm_time})`,
   });
 }
 
+// 알람 목록 화면 렌더링
+function renderAlarmList(alarms) {
+  if (!alarmListEl) return;
+
+  alarmListEl.innerHTML = "";
+
+  if (!alarms || alarms.length === 0) {
+    alarmListEl.innerHTML = "<p>등록된 알람이 없습니다.</p>";
+    return;
+  }
+
+  alarms.forEach((alarm) => {
+    const item = document.createElement("div");
+    item.style.border = "1px solid #ccc";
+    item.style.borderRadius = "10px";
+    item.style.padding = "12px";
+    item.style.marginBottom = "12px";
+
+    item.innerHTML = `
+      <p><strong>시간:</strong> ${alarm.alarm_time}</p>
+      <p><strong>요일:</strong> ${alarm.repeat_days || "-"}</p>
+      <p><strong>상태:</strong> ${alarm.is_enabled ? "활성" : "비활성"}</p>
+    `;
+
+    alarmListEl.appendChild(item);
+  });
+}
+
+// 알람 목록 조회
+async function loadAlarms() {
+  const token = getAccessToken();
+  console.log("loadAlarms token:", token);
+
+  if (!token) {
+    alert("로그인이 필요합니다.");
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/v1/alarms/", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+    });
+
+    console.log("loadAlarms status:", response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`알람 목록 조회 실패: ${response.status} / ${errorText}`);
+    }
+
+    const alarms = await response.json();
+    console.log("알람 목록:", alarms);
+
+    renderAlarmList(alarms);
+  } catch (error) {
+    console.error("알람 목록 조회 실패", error);
+    alert("알람 목록을 불러오지 못했습니다.");
+  }
+}
+
+// 알람 저장
+async function saveAlarm() {
+  const token = getAccessToken();
+
+  if (!token) {
+    alert("로그인이 필요합니다.");
+    return;
+  }
+
+  if (!alarmTimeInput || !alarmTimeInput.value) {
+    alert("알람 시간을 선택해주세요.");
+    return;
+  }
+
+  const repeatDays = getSelectedRepeatDays();
+
+  if (repeatDays.length === 0) {
+    alert("반복 요일을 하나 이상 선택해주세요.");
+    return;
+  }
+
+  const body = {
+    alarm_time: `${alarmTimeInput.value}:00`,
+    repeat_days: repeatDays,
+    is_enabled: alarmEnabledInput ? alarmEnabledInput.checked : true,
+  };
+
+  try {
+    const response = await fetch("/api/v1/alarms/", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`알람 저장 실패: ${response.status} / ${errorText}`);
+    }
+
+    await response.json();
+    alert("알람이 저장되었습니다.");
+    await loadAlarms();
+  } catch (error) {
+    console.error("알람 저장 실패:", error);
+    alert("알람 저장에 실패했습니다.");
+  }
+}
+
+// 웹 푸시용 VAPID 공개키를 Uint8Array 형태로 변환
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, "+")
+    .replace(/_/g, "/");
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+
+  return outputArray;
+}
+
+// Service Worker를 등록하고 registration 객체를 반환
+async function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return null;
+
+  try {
+    const registration = await navigator.serviceWorker.register("/sw.js");
+    console.log("Service Worker 등록 성공:", registration.scope);
+    return registration;
+  } catch (error) {
+    console.error("Service Worker 등록 실패:", error);
+    return null;
+  }
+}
+
+// 브라우저를 푸시 구독 상태로 만들고, 구독 정보를 서버에 저장
+async function subscribePush(registration) {
+  try {
+    const token = getAccessToken();
+
+    if (!token) {
+      console.error("access_token이 없습니다.");
+      return;
+    }
+
+    const keyResponse = await fetch("/api/v1/alarms/push/public-key");
+    const keyData = await keyResponse.json();
+    const publicKey = keyData.publicKey;
+
+    if (!publicKey) {
+      console.error("VAPID 공개키가 없습니다.");
+      return;
+    }
+
+    let subscription = await registration.pushManager.getSubscription();
+
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey),
+      });
+    }
+
+    const response = await fetch("/api/v1/alarms/push/subscribe", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(subscription),
+    });
+
+    if (!response.ok) {
+      console.error("Push 구독 저장 실패", await response.text());
+      return;
+    }
+
+    console.log("Push 구독 저장 성공");
+  } catch (error) {
+    console.error("Push 구독 실패:", error);
+  }
+}
+
+// 기존 due 알람 조회 방식
+// 현재는 웹 푸시가 핵심이지만, 보조 확인용으로 유지
 async function checkDueAlarmsForNotification() {
   const token = getAccessToken();
   if (!token) return;
 
   try {
-    const response = await fetch("/api/v1/alarms/alarms/due", {
+    const response = await fetch("/api/v1/alarms/due", {
       method: "GET",
       headers: {
-        "Authorization": `Bearer ${token}`,
-        "Accept": "application/json"
-      }
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
     });
 
-    if (!response.ok) return;
+    if (!response.ok) {
+      console.error("due 알람 조회 실패:", response.status);
+      return;
+    }
 
     const data = await response.json();
     if (!data.items || data.items.length === 0) return;
@@ -639,8 +290,22 @@ async function checkDueAlarmsForNotification() {
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
+  const registration = await registerServiceWorker();
   await requestAlarmNotificationPermission();
 
+  if (registration) {
+    await subscribePush(registration);
+  }
+
+  if (saveAlarmBtn) {
+    saveAlarmBtn.addEventListener("click", saveAlarm);
+  }
+
+  if (loadAlarmsBtn) {
+    loadAlarmsBtn.addEventListener("click", loadAlarms);
+  }
+
+  await loadAlarms();
   await checkDueAlarmsForNotification();
 
   setInterval(() => {

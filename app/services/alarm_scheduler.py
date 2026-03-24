@@ -1,43 +1,41 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from sqlalchemy import select
 
 from app.database import AsyncSessionLocal
-from app.models.user import User
-from app.services.alarm_service import get_due_alarms, trigger_alarm
+from app.services.alarm_service import process_due_alarms
+from app.config import get_settings
 
 scheduler = AsyncIOScheduler()
 
 
-def send_alarm(alarm):
-    print(
-        f"[ALARM] user_id={alarm.user_id}, "
-        f"alarm_id={alarm.id}, "
-        f"time={alarm.alarm_time}, "
-        f"repeat_days={alarm.repeat_days}"
-    )
-
-
 async def check_alarms():
+    """
+    스케줄러가 주기적으로 실행하는 함수.
+    DB 세션을 열고, 현재 시각 기준으로 울려야 하는 알람을 처리한다.
+    """
     async with AsyncSessionLocal() as db:
-        result = await db.execute(select(User.id))
-        user_ids = result.scalars().all()
-
-        due_alarms = []
-        for user_id in user_ids:
-            user_due_alarms = await get_due_alarms(db, user_id)
-            due_alarms.extend(user_due_alarms)
-
-        for alarm in due_alarms:
-            send_alarm(alarm)
-            await trigger_alarm(db, alarm)
+        await process_due_alarms(db)
 
 
 def start_scheduler():
-    if not scheduler.running:
-        scheduler.add_job(check_alarms, "interval", seconds=30, id="check_alarms")
-        scheduler.start()
+    """
+    앱 시작 시 알람 스케줄러를 등록하고 실행한다.
+    알람 확인 주기는 config.py 설정값을 따른다.
+    """
+    settings = get_settings()
+
+    scheduler.add_job(
+        check_alarms,
+        "interval",
+        seconds=settings.ALARM_CHECK_INTERVAL_SECONDS,
+        id="check_alarms",
+        replace_existing=True,
+    )
+    scheduler.start()
 
 
 def stop_scheduler():
+    """
+    앱 종료 시 스케줄러를 안전하게 종료한다.
+    """
     if scheduler.running:
         scheduler.shutdown()
