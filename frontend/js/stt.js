@@ -70,6 +70,8 @@ const stt = (() => {
             } else if (data.type === "final") {
                 appendText(data.text);
                 setStatus("");
+            } else if (data.type === "error") {
+                setStatus(data.text);
             }
         };
         ws.onerror = (e) => {

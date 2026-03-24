@@ -128,6 +128,10 @@ async def websocket_stt(websocket: WebSocket, token: str = Query(...)):
     def on_canceled(evt):
         logger.error(f"Azure STT 취소됨: {evt.result.reason}")
         logger.error(f"에러 상세: {evt.result.cancellation_details}")
+        loop.call_soon_threadsafe(
+            asyncio.ensure_future,
+            websocket.send_json({"type": "error", "text": "음성 인식 오류가 발생했어요."})
+        )
 
     recognizer.recognizing.connect(on_recognizing)
     recognizer.recognized.connect(on_recognized)
