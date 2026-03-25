@@ -84,7 +84,38 @@ async def update_diary(
     diary = await diary_svc.get_diary(db, diary_id, current_user.id)
     if not diary:
         raise HTTPException(status_code=404, detail="일기를 찾을 수 없습니다.")
-    return await diary_svc.update_diary(db, diary, body)
+    updated_diary = await diary_svc.update_diary(db, diary, body)
+
+    # 일기 수정 후 AI 피드백 자동 갱신
+    try:
+        from app.models.persona import Persona
+        from sqlalchemy import select as sa_select
+        persona = None
+        if updated_diary.persona_id:
+            result = await db.execute(sa_select(Persona).where(Persona.id == updated_diary.persona_id))
+            persona = result.scalar_one_or_none()
+
+        # 기존 피드백 삭제
+        existing = await feedback_svc.get_feedback(db, diary_id)
+        if existing:
+            await db.delete(existing)
+            await db.commit()
+
+        # 새 피드백 생성
+        await feedback_svc.create_feedback(
+            db=db,
+            diary_id=updated_diary.id,
+            user_id=current_user.id,
+            persona_id=updated_diary.persona_id,
+            diary_content=updated_diary.content,
+            persona_name=persona.name if persona else "말벗",
+            preset_type=persona.preset_type if persona else "empathy",
+            custom_description=persona.custom_description if persona else None,
+        )
+    except Exception:
+        pass  # 피드백 갱신 실패해도 일기 수정은 성공으로 처리
+
+    return updated_diary
 
 
 # ── DELETE /diaries/{diary_id} ─ 삭제 ───────────
