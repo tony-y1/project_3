@@ -399,7 +399,7 @@ async function initDiaryReadPage() {
                     contentEl.value = updatedDiary.content || "";
                     await populatePersonaSelect(personaSelect, updatedDiary.persona_id || "");
 
-           isEditing = false;
+                    isEditing = false;
                     setDiaryReadOnly(fields, true);
                     const voiceBtnWrapper = document.getElementById("voice-btn-wrapper");
                     if (voiceBtnWrapper) voiceBtnWrapper.classList.add("hidden");
