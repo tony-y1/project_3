@@ -12,12 +12,81 @@
     <link href="https://fonts.googleapis.com/css2?family=Petit+Formal+Script&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+        }
+
+        #us-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+        }
+
+        body.page-profile {
+            background: transparent !important;
+        }
+
+        /* 워터마크 강제 숨김 */
+        a[href*="unicorn.studio"],
+        a[href*="hiunicornstudio"],
+        .unicorn-studio-watermark,
+        [class*="unicorn-studio"],
+        [id*="unicorn-studio"] {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+
+        /* 콘텐츠 레이어 */
+        .profile-layer {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 네비게이션 배경 */
+        .profile-nav {
+            background: rgba(5, 8, 20, 0.05) !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+
+        /* 헤더 텍스트 흰색 */
+        .profile-hero-title {
+            color: #ffffff;
+        }
+
+        /* 달력 select option */
+        .profile-calendar-select option {
+            background-color: #1a0e14;
+            color: #ffffff;
+        }
+
+        /* time input 색상 */
+        .profile-alarm-time::-webkit-calendar-picker-indicator {
+            filter: invert(1) opacity(0.5);
+        }
+    </style>
 </head>
 <body class="page-profile min-h-screen font-kr relative">
-    <div class="absolute top-0 left-0 w-full h-16 z-30 peer"></div>
 
-    <!-- 네비게이션: 로그아웃 → AI 페르소나 관리 링크로 변경 -->
-    <nav class="absolute top-0 left-0 w-full text-[#E8D8C4] shadow-2xl z-40 transform -translate-y-full transition-transform duration-500 ease-in-out peer-hover:translate-y-0 hover:translate-y-0 border-b border-[#C7B7A3]/20" style="background-color: var(--nav-bg);">
+    <!-- Unicorn Studio 배경 -->
+    <div id="us-background" data-us-project="ZnNikMOUWaAR1UzFsvqp"></div>
+
+    <div class="profile-layer absolute top-0 left-0 w-full h-16 z-30 peer"></div>
+
+    <!-- 드롭다운 네비게이션 -->
+    <nav class="profile-nav profile-layer absolute top-0 left-0 w-full text-white/80 shadow-2xl z-40 transform -translate-y-full transition-transform duration-500 ease-in-out peer-hover:translate-y-0 hover:translate-y-0">
         <div class="w-full max-w-7xl mx-auto flex justify-between items-center px-8 md:px-16 py-6 font-kr">
             <a href="index.html"      class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300">메인으로</a>
             <a href="my-diary.html"   class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300">나의 일기장</a>
@@ -25,14 +94,15 @@
         </div>
     </nav>
 
-    <main class="min-h-screen px-6 py-16 md:px-10 lg:px-16">
+    <main class="profile-layer min-h-screen px-6 py-16 md:px-10 lg:px-16">
         <div class="profile-shell">
 
             <!-- 헤더 -->
             <section class="profile-hero">
-                <p class="font-script text-2xl md:text-3xl text-[#E8D8C4]/85 mb-3">My profile</p>
-                <h1 class="text-3xl md:text-5xl tracking-tight text-[#E8D8C4] font-semibold mb-4">내 프로필</h1>
+                <p class="font-script text-2xl md:text-3xl text-white/70 mb-3">My profile</p>
+                <h1 class="profile-hero-title text-3xl md:text-5xl tracking-tight font-semibold mb-4">내 프로필</h1>
                 <div class="profile-hero-line"></div>
+                <p class="profile-hero-copy">달력과 알람을 탭에서 나눠서 관리할 수 있어요.</p>
             </section>
 
             <!-- 사이드바 + 메인 콘텐츠 래퍼 -->
@@ -41,9 +111,8 @@
                 <!-- ─── 왼쪽 사이드바 ─── -->
                 <aside class="profile-sidebar-card">
 
-                    <!-- 1. 프로필 사진 + 2. 닉네임 -->
+                    <!-- 아바타 + 닉네임 -->
                     <div class="profile-sid-identity">
-                        <!-- 아바타 -->
                         <div class="profile-sid-avatar">
                             <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="profile-sid-avatar-icon" id="profile-avatar-icon">
                                 <circle cx="24" cy="18" r="9" fill="currentColor" opacity="0.55"/>
@@ -51,7 +120,6 @@
                             </svg>
                             <img id="profile-avatar-img" class="profile-sid-avatar-img hidden" alt="프로필 사진">
                         </div>
-                        <!-- 닉네임 -->
                         <div class="profile-sid-nickname-wrap">
                             <p class="profile-sid-nickname-label">닉네임</p>
                             <p class="profile-sid-nickname" id="profile-nickname">—</p>
@@ -114,7 +182,7 @@
                                 <div class="profile-alarm-header">
                                     <div>
                                         <p class="profile-calendar-caption">Alarm settings</p>
-                                        <h2 class="profile-calendar-title">알람 설정</h2>
+                                        <h2 class="profile-hero-title text-2xl font-semibold">알람 설정</h2>
                                     </div>
                                     <button id="profile-alarm-save" type="button" class="profile-calendar-nav">저장</button>
                                 </div>
@@ -163,80 +231,14 @@
                             </section>
                         </div>
                     </section>
-                </div><!-- /profile-main-content -->
+                </div>
 
-            </div><!-- /profile-body-layout -->
-        </div><!-- /profile-shell -->
+            </div>
+        </div>
     </main>
 
     <script src="js/api.js"></script>
     <script src="js/frontend.js"></script>
     <script src="js/auth.js"></script>
-
-    <!-- 닉네임 주입 + 출석 통계 -->
-    <script>
-    (function () {
-
-        /* ── 닉네임 ── */
-        function fillNickname() {
-            var el = document.getElementById("profile-nickname");
-            if (!el) return;
-            try {
-                var raw  = localStorage.getItem("auth_user");
-                var user = raw ? JSON.parse(raw) : null;
-                var name = user && user.nickname ? user.nickname.trim() : "";
-                el.textContent = name || "—";
-            } catch (_) {
-                el.textContent = "—";
-            }
-        }
-
-        /* ── 이번달 출석 통계 ── */
-        function renderAttendance() {
-            var el = document.getElementById("profile-attendance-message");
-            if (!el) return;
-
-            var today     = new Date();
-            var year      = today.getFullYear();
-            var month     = today.getMonth();
-            var todayDate = today.getDate();
-            var missed    = 0;
-
-            for (var d = 1; d <= todayDate; d++) {
-                var key =
-                    year + "-" +
-                    String(month + 1).padStart(2, "0") + "-" +
-                    String(d).padStart(2, "0");
-
-                if (typeof profileDiaryDates === "undefined" || !profileDiaryDates.has(key)) {
-                    missed++;
-                }
-            }
-
-            if (missed === 0) {
-                el.textContent = "이번달은 하루도 빠짐없이 일기를 썼어요! 🎉";
-                el.classList.add("is-perfect");
-            } else {
-                el.textContent = "이번달에는 " + missed + "일 일기작성을 못했어요!!";
-            }
-        }
-
-        /* profileDiaryDates 는 initProfilePage(비동기)가 완료된 뒤 세팅되므로 polling */
-        function waitAndRender(tries) {
-            if (tries <= 0) { renderAttendance(); return; }
-            if (typeof profileDiaryDates !== "undefined") {
-                renderAttendance();
-            } else {
-                setTimeout(function () { waitAndRender(tries - 1); }, 350);
-            }
-        }
-
-        document.addEventListener("DOMContentLoaded", function () {
-            fillNickname();
-            /* API 응답 후 약 1 s 뒤부터 최대 7 초 polling */
-            setTimeout(function () { waitAndRender(20); }, 1000);
-        });
-    })();
-    </script>
 </body>
 </html>

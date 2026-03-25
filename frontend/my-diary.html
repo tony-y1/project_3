@@ -5,11 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>나의 일기장 - "하루" commit()</title>
 
-    <script>
-        if (!localStorage.getItem("access_token")) {
-            window.location.replace("login.html");
-        }
-    </script>
     <script src="https://cdn.tailwindcss.com"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,14 +12,59 @@
     <link href="https://fonts.googleapis.com/css2?family=Petit+Formal+Script&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+        }
+
+        #us-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+        }
+
+        /* 워터마크 강제 숨김 */
+        a[href*="unicorn.studio"],
+        a[href*="hiunicornstudio"],
+        .unicorn-studio-watermark,
+        [class*="unicorn-studio"],
+        [id*="unicorn-studio"] {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+
+        /* 콘텐츠 레이어 */
+        .diary-layer {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 네비게이션 배경 (다크 글래스모피즘) */
+        .diary-nav {
+            background: rgba(5, 8, 20, 0.05) !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(180, 200, 255, 0.08) !important;
+        }
+    </style>
 </head>
 <body class="page-diary min-h-screen relative font-kr">
 
-    <!-- 호버 트리거 영역 -->
-    <div class="absolute top-0 left-0 w-full h-16 z-30 peer"></div>
+    <div id="us-background" data-us-project="ZnNikMOUWaAR1UzFsvqp"></div>
 
-    <!-- 드롭다운 네비게이션 -->
-    <nav class="absolute top-0 left-0 w-full text-[#E8D8C4] shadow-2xl z-40 transform -translate-y-full transition-transform duration-500 ease-in-out peer-hover:translate-y-0 hover:translate-y-0 border-b border-[#C7B7A3]/20" style="background-color: var(--nav-bg);">
+    <div class="diary-layer absolute top-0 left-0 w-full h-16 z-30 peer"></div>
+
+    <nav class="diary-nav diary-layer absolute top-0 left-0 w-full text-[#c8d8f8] shadow-2xl z-40 transform -translate-y-full transition-transform duration-500 ease-in-out peer-hover:translate-y-0 hover:translate-y-0">
         <div class="w-full max-w-7xl mx-auto flex justify-between items-center px-8 md:px-16 py-6 font-kr">
             <a href="index.html"      class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300">메인으로</a>
             <a href="profile.html"    class="text-sm md:text-lg font-light tracking-widest hover:text-white transition-colors duration-300">내 프로필</a>
@@ -32,17 +72,17 @@
         </div>
     </nav>
 
-    <main class="min-h-screen px-6 py-24 md:px-10 lg:px-16 overflow-hidden">
+    <main class="diary-layer min-h-screen px-6 py-24 md:px-10 lg:px-16 overflow-hidden">
         <div class="max-w-7xl mx-auto">
 
             <div class="text-center mb-10">
-                <p class="font-script text-2xl md:text-3xl text-[#E8D8C4]/85 mb-3">My diary archive</p>
-                <h1 class="text-3xl md:text-5xl tracking-tight text-[#E8D8C4] font-semibold mb-4">
+                <p class="font-script text-2xl md:text-3xl text-white/70 mb-3">My diary archive</p>
+                <h1 class="text-3xl md:text-5xl tracking-tight text-white font-semibold mb-4">
                     나의 일기장
                 </h1>
-                <div class="w-24 h-[1px] mx-auto bg-[#C7B7A3]/70 mb-5"></div>
+                <div class="w-24 h-[1px] mx-auto bg-white/30 mb-5"></div>
 
-                <p class="text-[#E8D8C4] text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
+                <p class="text-white/70 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
                     하루를 기록하면 한 권의 책처럼 쌓이고, 흐릿한 기억은 AI 검색으로 다시 찾아볼 수 있어요.
                 </p>
 
@@ -63,8 +103,8 @@
 
                 <div class="flex items-center justify-between mb-6">
                     <div>
-                        <p class="text-[#E8D8C4] text-xs tracking-[0.28em] uppercase mb-2">My bookshelf</p>
-                        <h3 class="text-[#E8D8C4] text-2xl md:text-3xl font-semibold">기록된 일기 책장</h3>
+                        <p class="text-white/70 text-xs tracking-[0.28em] uppercase mb-2">My bookshelf</p>
+                        <h3 class="text-white text-2xl md:text-3xl font-semibold">기록된 일기 책장</h3>
                     </div>
 
                     <div class="flex gap-3">
@@ -87,14 +127,13 @@
         </div>
     </main>
 
-    <!-- AI 검색 모달 -->
     <div id="search-modal" class="diary-modal hidden">
         <div class="diary-modal-backdrop" onclick="closeSearchModal()"></div>
         <div class="diary-modal-card">
             <div class="flex items-start justify-between gap-4 mb-8">
                 <div>
-                    <p class="font-script text-xl text-[#561C24]/80 mb-1">AI memory search</p>
-                    <h2 class="text-2xl md:text-3xl font-semibold text-[#561C24]">AI로 기억 찾기</h2>
+                    <p class="font-script text-xl text-white/70 mb-1">AI memory search</p>
+                    <h2 class="text-2xl md:text-3xl font-semibold text-white">AI로 기억 찾기</h2>
                 </div>
                 <button type="button" class="diary-close-btn" onclick="closeSearchModal()">✕</button>
             </div>
@@ -102,14 +141,14 @@
             <div class="space-y-5">
                 <div>
                     <div class="flex items-center justify-between mb-1">
-                        <label class="persona-label translate-x-2 translate-y-6 ">찾고 싶은 기억</label>
+                        <label class="persona-label translate-x-2 translate-y-6">찾고 싶은 기억</label>
                         <div class="flex flex-col items-end gap-0 -translate-x-4 translate-y-0">
-                            <button type="button" id="voice-btn" class="voice-btn">음성으로 입력</button>
-                            <div class="flex items-center gap-1 text-xs text-[#561C24]/40">
+                            <button type="button" id="voice-btn" class="voice-btn-modal">음성으로 입력</button>
+                            <div class="flex items-center gap-1 text-xs text-white/40">
                                 <span>모드:</span>
-                                <button type="button" id="stt-mode-toggle" class="text-xs text-[#561C24]/60 underline underline-offset-2 hover:text-[#561C24] transition-colors bg-transparent border-none cursor-pointer p-0"></button>
+                                <button type="button" id="stt-mode-toggle" class="text-xs text-white/60 underline underline-offset-2 hover:text-white transition-colors bg-transparent border-none cursor-pointer p-0"></button>
                             </div>
-                            <span id="stt-status" class="hidden text-xs text-[#561C24]/60 text-right max-w-[200px] leading-snug"></span>
+                            <span id="stt-status" class="hidden text-xs text-white/60 text-right max-w-[200px] leading-snug"></span>
                         </div>
                     </div>
                     <textarea id="diary-search-input" class="persona-textarea diary-search-textarea" placeholder="예: 친구랑 카페 갔던 날, 비슷한 내용의 일기 찾아줘"></textarea>

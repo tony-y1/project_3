@@ -41,6 +41,27 @@ function disableAutocompleteOutsideLogin() {
 }
 
 /* =========================
+   Unicorn Studio Global Init
+========================= */
+function initUnicornStudio() {
+    !function(){var u=window.UnicornStudio;if(u&&u.init){if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){u.init()})}else{u.init()}}else{window.UnicornStudio={isInitialized:!1};var i=document.createElement("script");i.src="https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v2.1.5/dist/unicornStudio.umd.js",i.onload=function(){if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){UnicornStudio.init()})}else{UnicornStudio.init()}},(document.head||document.body).appendChild(i)}}();
+
+    function removeUnicornWatermark() {
+        document.querySelectorAll(
+            'a[href*="unicorn.studio"], a[href*="hiunicornstudio"], ' +
+            '.unicorn-studio-watermark, [class*="unicorn-studio"], [id*="unicorn-studio"]'
+        ).forEach((node) => node.remove());
+    }
+
+    removeUnicornWatermark();
+
+    new MutationObserver(removeUnicornWatermark).observe(document.body, {
+        childList: true,
+        subtree: true,
+    });
+}
+
+/* =========================
    login.html
 ========================= */
 function toggleForm(type) {
@@ -57,89 +78,6 @@ function toggleForm(type) {
     } else {
         signupForm.classList.add("hidden-form");
         loginForm.classList.remove("hidden-form");
-    }
-}
-
-/* =========================
-   ai-persona.html
-========================= */
-function addPersona() {
-    const nameInput = document.getElementById("persona-name");
-    const toneInput = document.getElementById("persona-tone");
-    const styleInput = document.getElementById("persona-style");
-    const personaList = document.getElementById("persona-list");
-
-    if (!nameInput || !toneInput || !styleInput || !personaList) {
-        return;
-    }
-
-    const name = nameInput.value.trim();
-    const tone = toneInput.value.trim();
-    const style = styleInput.value.trim();
-
-    if (!name || !tone || !style) {
-        alert("모든 항목을 입력해주세요.");
-        return;
-    }
-
-    const emptyBox = personaList.querySelector(".persona-empty");
-    if (emptyBox) {
-        emptyBox.remove();
-    }
-
-    const card = document.createElement("div");
-    card.className = "persona-card";
-
-    card.innerHTML = `
-        <div class="persona-card-header">
-            <div>
-                <div class="persona-card-title">${escapeHtml(name)}</div>
-            </div>
-            <button type="button" class="persona-delete-btn" onclick="deletePersona(this)">삭제</button>
-        </div>
-
-        <div class="mb-4">
-            <span class="persona-badge">Persona</span>
-        </div>
-
-        <div class="persona-meta">
-            <div class="persona-meta-item">
-                <span class="persona-meta-label">말투 / 분위기</span>
-                <div class="persona-meta-value">${escapeHtml(tone)}</div>
-            </div>
-
-            <div class="persona-meta-item">
-                <span class="persona-meta-label">AI 반응 스타일</span>
-                <div class="persona-meta-value">${escapeHtml(style).replace(/\n/g, "<br>")}</div>
-            </div>
-        </div>
-    `;
-
-    personaList.prepend(card);
-
-    nameInput.value = "";
-    toneInput.value = "";
-    styleInput.value = "";
-}
-
-function deletePersona(button) {
-    const card = button.closest(".persona-card");
-    const personaList = document.getElementById("persona-list");
-
-    if (!card || !personaList) {
-        return;
-    }
-
-    card.remove();
-
-    const cards = personaList.querySelectorAll(".persona-card");
-    if (cards.length === 0) {
-        personaList.innerHTML = `
-            <div class="persona-empty">
-                아직 만든 페르소나가 없어요.<br>
-                왼쪽에서 첫 번째 페르소나를 만들어보세요.
-            </div>
-        `;
     }
 }
 
@@ -343,43 +281,6 @@ function formatProfileDateKey(date) {
     return `${year}-${month}-${day}`;
 }
 
-function renderProfileCalendar() {
-    const title = document.getElementById("profile-calendar-title");
-    const grid = document.getElementById("profile-calendar-grid");
-
-    if (!title || !grid) return;
-
-    const current = new Date(profileCalendarDate.getFullYear(), profileCalendarDate.getMonth(), 1);
-    const year = current.getFullYear();
-    const month = current.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-
-    title.textContent = `${year}년 ${month + 1}월`;
-    grid.innerHTML = "";
-
-    for (let i = 0; i < firstDay.getDay(); i++) {
-        const emptyCell = document.createElement("div");
-        emptyCell.className = "profile-calendar-cell is-empty";
-        grid.appendChild(emptyCell);
-    }
-
-    for (let day = 1; day <= lastDay.getDate(); day++) {
-        const cellDate = new Date(year, month, day);
-        const key = formatProfileDateKey(cellDate);
-        const hasDiary = profileDiaryDates.has(key);
-        const cell = document.createElement("div");
-
-        cell.className = `profile-calendar-cell${hasDiary ? " has-diary" : ""}`;
-        cell.innerHTML = `
-            <span class="profile-calendar-day">${day}</span>
-            ${hasDiary ? '<span class="profile-calendar-mark">작성 완료</span>' : ""}
-        `;
-
-        grid.appendChild(cell);
-    }
-}
-
 function showProfileTab(target) {
     const tabButtons = document.querySelectorAll(".profile-tab-button");
     const panels = document.querySelectorAll(".profile-tab-panel");
@@ -427,187 +328,6 @@ function initProfileTabs() {
         button.addEventListener("click", () => {
             showProfileTab(button.dataset.tabTarget);
         });
-    });
-}
-
-function initProfileAlarmPage() {
-    const rows = document.querySelectorAll(".profile-alarm-row");
-    const saveButton = document.getElementById("profile-alarm-save");
-    const message = document.getElementById("profile-alarm-message");
-
-    if (!rows.length || !saveButton) {
-        return;
-    }
-
-    const settings = loadProfileAlarmSettings();
-
-    rows.forEach((row) => {
-        const day = row.dataset.day;
-        const enabledInput = row.querySelector(".profile-alarm-enabled");
-        const timeInput = row.querySelector(".profile-alarm-time");
-
-        if (!day || !enabledInput || !timeInput) {
-            return;
-        }
-
-        const saved = settings[day];
-        enabledInput.checked = Boolean(saved?.enabled);
-        timeInput.value = saved?.time || timeInput.value || "08:00";
-        setProfileAlarmRowState(row, enabledInput.checked);
-
-        enabledInput.addEventListener("change", () => {
-            setProfileAlarmRowState(row, enabledInput.checked);
-            if (message) {
-                message.classList.add("hidden");
-                message.textContent = "";
-            }
-        });
-    });
-
-    saveButton.addEventListener("click", () => {
-        const nextSettings = {};
-
-        rows.forEach((row) => {
-            const day = row.dataset.day;
-            const enabledInput = row.querySelector(".profile-alarm-enabled");
-            const timeInput = row.querySelector(".profile-alarm-time");
-
-            if (!day || !enabledInput || !timeInput) {
-                return;
-            }
-
-            nextSettings[day] = {
-                enabled: enabledInput.checked,
-                time: timeInput.value || "08:00",
-            };
-        });
-
-        saveProfileAlarmSettings(nextSettings);
-
-        if (message) {
-            message.textContent = "알람 설정이 저장되었어요.";
-            message.classList.remove("hidden");
-        }
-    });
-}
-
-async function initProfilePage() {
-    const grid = document.getElementById("profile-calendar-grid");
-    const prevButton = document.getElementById("profile-calendar-prev");
-    const nextButton = document.getElementById("profile-calendar-next");
-
-    initProfileTabs();
-    initProfileAlarmPage();
-
-    if (!grid || typeof apiRequest !== "function") {
-        return;
-    }
-
-    profileCalendarDate = new Date();
-    profileCalendarDate.setDate(1);
-
-    try {
-        const diaries = await apiRequest("/diaries/", { method: "GET" });
-        profileDiaryDates = new Set(
-            diaries
-                .map((diary) => diary.diary_date)
-                .filter(Boolean)
-        );
-    } catch (_error) {
-        profileDiaryDates = new Set();
-    }
-
-    renderProfileCalendar();
-
-    prevButton?.addEventListener("click", () => {
-        profileCalendarDate = new Date(profileCalendarDate.getFullYear(), profileCalendarDate.getMonth() - 1, 1);
-        renderProfileCalendar();
-    });
-
-    nextButton?.addEventListener("click", () => {
-        profileCalendarDate = new Date(profileCalendarDate.getFullYear(), profileCalendarDate.getMonth() + 1, 1);
-        renderProfileCalendar();
-    });
-}
-
-function renderProfileCalendar() {
-    const yearSelect = document.getElementById("profile-calendar-year");
-    const monthSelect = document.getElementById("profile-calendar-month");
-    const grid = document.getElementById("profile-calendar-grid");
-
-    if (!yearSelect || !monthSelect || !grid) {
-        return;
-    }
-
-    const current = new Date(profileCalendarDate.getFullYear(), profileCalendarDate.getMonth(), 1);
-    const year = current.getFullYear();
-    const month = current.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-
-    yearSelect.value = String(year);
-    monthSelect.value = String(month + 1);
-    grid.innerHTML = "";
-
-    for (let i = 0; i < firstDay.getDay(); i++) {
-        const emptyCell = document.createElement("div");
-        emptyCell.className = "profile-calendar-cell is-empty";
-        grid.appendChild(emptyCell);
-    }
-
-    for (let day = 1; day <= lastDay.getDate(); day++) {
-        const cellDate = new Date(year, month, day);
-        const key = formatProfileDateKey(cellDate);
-        const hasDiary = profileDiaryDates.has(key);
-        const cell = document.createElement("div");
-
-        cell.className = `profile-calendar-cell${hasDiary ? " has-diary" : ""}`;
-        cell.innerHTML = `
-            <span class="profile-calendar-day">${day}</span>
-            ${hasDiary ? '<span class="profile-calendar-mark">작성 완료</span>' : ""}
-        `;
-
-        grid.appendChild(cell);
-    }
-}
-
-function initProfileCalendarControls() {
-    const yearSelect = document.getElementById("profile-calendar-year");
-    const monthSelect = document.getElementById("profile-calendar-month");
-
-    if (!yearSelect || !monthSelect) {
-        return;
-    }
-
-    if (!yearSelect.options.length) {
-        for (let year = 2020; year <= 2035; year++) {
-            const option = document.createElement("option");
-            option.value = String(year);
-            option.textContent = `${year}년`;
-            yearSelect.appendChild(option);
-        }
-    }
-
-    if (!monthSelect.options.length) {
-        for (let month = 1; month <= 12; month++) {
-            const option = document.createElement("option");
-            option.value = String(month);
-            option.textContent = `${month}월`;
-            monthSelect.appendChild(option);
-        }
-    }
-
-    yearSelect.value = String(profileCalendarDate.getFullYear());
-    monthSelect.value = String(profileCalendarDate.getMonth() + 1);
-
-    yearSelect.addEventListener("change", () => {
-        profileCalendarDate = new Date(Number(yearSelect.value), profileCalendarDate.getMonth(), 1);
-        renderProfileCalendar();
-    });
-
-    monthSelect.addEventListener("change", () => {
-        profileCalendarDate = new Date(profileCalendarDate.getFullYear(), Number(monthSelect.value) - 1, 1);
-        renderProfileCalendar();
     });
 }
 
@@ -781,64 +501,62 @@ async function initProfilePage() {
     renderProfileCalendar();
 }
 
-function addPersona() {
-    const nameInput = document.getElementById("persona-name");
-    const toneInput = document.getElementById("persona-tone");
-    const styleInput = document.getElementById("persona-style");
-    const personaList = document.getElementById("persona-list");
-
-    if (!nameInput || !toneInput || !styleInput || !personaList) {
-        return;
+function fillNickname() {
+    var el = document.getElementById("profile-nickname");
+    if (!el) return;
+    try {
+        var raw  = localStorage.getItem("auth_user");
+        var user = raw ? JSON.parse(raw) : null;
+        var name = user && user.nickname ? user.nickname.trim() : "";
+        el.textContent = name || "—";
+    } catch (_) {
+        el.textContent = "—";
     }
-
-    const name = nameInput.value.trim();
-    const tone = toneInput.value.trim();
-    const style = styleInput.value.trim();
-
-    if (!name || !tone || !style) {
-        alert("모든 항목을 입력해주세요.");
-        return;
-    }
-
-    const emptyBox = personaList.querySelector(".persona-empty");
-    if (emptyBox) {
-        emptyBox.remove();
-    }
-
-    const card = document.createElement("div");
-    card.className = "persona-card";
-
-    card.innerHTML = `
-        <details class="persona-card-details">
-            <summary class="persona-card-summary-row">
-                <span class="persona-card-title">${escapeHtml(name)}</span>
-                <span class="persona-card-arrow">▼</span>
-            </summary>
-            <div class="persona-card-content">
-                <div class="persona-meta">
-                    <div class="persona-meta-item">
-                        <span class="persona-meta-label">말투 / 분위기</span>
-                        <div class="persona-meta-value">${escapeHtml(tone)}</div>
-                    </div>
-                    <div class="persona-meta-item">
-                        <span class="persona-meta-label">AI 반응 스타일</span>
-                        <div class="persona-meta-value">${escapeHtml(style).replace(/\n/g, "<br>")}</div>
-                    </div>
-                </div>
-                <div class="persona-card-actions">
-                    <button type="button" class="persona-delete-btn" onclick="deletePersona(this)">삭제</button>
-                </div>
-            </div>
-        </details>
-    `;
-
-    personaList.prepend(card);
-
-    nameInput.value = "";
-    toneInput.value = "";
-    styleInput.value = "";
 }
 
+function renderAttendance() {
+    var el = document.getElementById("profile-attendance-message");
+    if (!el) return;
+
+    var today     = new Date();
+    var year      = today.getFullYear();
+    var month     = today.getMonth();
+    var todayDate = today.getDate();
+    var written   = 0;
+
+    for (var d = 1; d <= todayDate; d++) {
+        var key =
+            year + "-" +
+            String(month + 1).padStart(2, "0") + "-" +
+            String(d).padStart(2, "0");
+
+        if (typeof profileDiaryDates !== "undefined" && profileDiaryDates.has(key)) {
+            written++;
+        }
+    }
+
+    if (written === todayDate) {
+        el.textContent = "이번달은 하루도 빠짐없이 일기를 썼어요! 🎉";
+        el.classList.add("is-perfect");
+    } else if (written === 0) {
+        el.textContent = "아직 이번달 일기를 작성하지 않았어요.";
+    } else {
+        el.textContent = "이번달에는 " + written + "일이나 일기를 작성했어요!!";
+    }
+}
+
+function waitAndRenderAttendance(tries) {
+    if (tries <= 0) { renderAttendance(); return; }
+    if (typeof profileDiaryDates !== "undefined") {
+        renderAttendance();
+    } else {
+        setTimeout(function () { waitAndRenderAttendance(tries - 1); }, 350);
+    }
+}
+
+/* =========================
+   ai-persona.html
+========================= */
 function buildPersonaDescription(tone, style) {
     return JSON.stringify({ tone, style });
 }
@@ -1010,7 +728,7 @@ function initPersonaPage() {
 }
 
 /* =========================
-   my-diary.html Events
+   Global Events (DOMContentLoaded / Resize)
 ========================= */
 window.addEventListener("resize", () => {
     updateDiaryShelfPosition();
@@ -1021,6 +739,14 @@ window.addEventListener("DOMContentLoaded", () => {
     disableAutocompleteOutsideLogin();
     initPersonaPage();
     initProfilePage();
+    initUnicornStudio(); // 전역으로 통합된 유니콘 스튜디오 로드 함수 호출
+
+    // profile.html 렌더링 스크립트 실행
+    const body = document.body;
+    if (body && body.classList.contains("page-profile")) {
+        fillNickname();
+        setTimeout(function () { waitAndRenderAttendance(20); }, 1000);
+    }
 
     const shelfWrapper = document.querySelector(".diary-shelf-wrapper");
 
