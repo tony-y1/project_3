@@ -8,6 +8,11 @@
 <body>
     <h2>🎙️ 실시간 음성 인식</h2>
 
+    <p>
+        <label>Bearer 토큰 (docs에서 복사)</label><br>
+        <input id="tokenInput" type="text" placeholder="eyJ..." style="width:500px">
+    </p>
+
     <button id="startBtn">🔴 녹음 시작</button>
     <button id="stopBtn" disabled>⏹ 녹음 중지</button>
 
@@ -24,10 +29,16 @@
         let ws, audioContext, processor;
         let t_start;
         startBtn.onclick = async () => {
+            const token = document.getElementById("tokenInput").value.trim();
+            if (!token) { alert("토큰을 입력해주세요."); return; }
+
             t_start = performance.now();
-            // 1. WebSocket 연결
+            // 1. WebSocket 연결 후 첫 메시지로 토큰 전송
             ws = new WebSocket("ws://localhost:8000/api/v1/voice/ws/stt");
-            ws.onopen    = () => console.log("WebSocket 연결됨");
+            ws.onopen = () => {
+                console.log("WebSocket 연결됨");
+                ws.send(JSON.stringify({ token }));
+            };
             ws.onmessage = (e) => {
                 const data = JSON.parse(e.data);
                 if (data.type === "partial") {

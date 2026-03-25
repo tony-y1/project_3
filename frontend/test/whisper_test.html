@@ -8,6 +8,11 @@
     <h2>🎙️ OpenAI Whisper STT 테스트</h2>
     <p style="color:gray">녹음 완료 후 전송 방식 (배치)</p>
 
+    <p>
+        <label>Bearer 토큰 (docs에서 복사)</label><br>
+        <input id="tokenInput" type="text" placeholder="eyJ..." style="width:500px">
+    </p>
+
     <button id="startBtn">🔴 녹음 시작</button>
     <button id="stopBtn" disabled>⏹ 녹음 중지 후 변환</button>
 
@@ -25,6 +30,9 @@
         let mediaRecorder, audioChunks = [], t_start;
 
         startBtn.onclick = async () => {
+            const token = document.getElementById("tokenInput").value.trim();
+            if (!token) { alert("토큰을 입력해주세요."); return; }
+
             audioChunks = [];
             finalEl.textContent = "";
             elapsed.textContent = "";
@@ -47,6 +55,7 @@
                 t_start = performance.now();
                 const response = await fetch("/api/v1/voice/stt", {
                     method: "POST",
+                    headers: { "Authorization": `Bearer ${token}` },
                     body: formData,
                 });
                 const t_end = performance.now();

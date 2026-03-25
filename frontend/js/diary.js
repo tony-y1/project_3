@@ -385,6 +385,8 @@ async function initDiaryReadPage() {
 
                     isEditing = false;
                     setDiaryReadOnly(fields, true);
+                    const voiceBtnWrapper = document.getElementById("voice-btn-wrapper");
+                    if (voiceBtnWrapper) voiceBtnWrapper.classList.add("hidden");
                     if (personaSelect) {
                         personaSelect.disabled = true;
                     }
