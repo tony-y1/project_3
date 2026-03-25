@@ -95,8 +95,8 @@ async def update_diary(
             result = await db.execute(sa_select(Persona).where(Persona.id == updated_diary.persona_id))
             persona = result.scalar_one_or_none()
 
-        # 내용이 변경됐을 때만 피드백 재생성
-        if body.content is not None:
+        # 기존 일기 내용과 실제로 달라졌을 때만 피드백 재생성
+        if body.content is not None and body.content != diary.content:
             existing = await feedback_svc.get_feedback(db, diary_id)
             if existing:
                 await db.delete(existing)
