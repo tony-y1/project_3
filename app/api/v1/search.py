@@ -31,4 +31,8 @@ async def search_diaries(
         user_id=current_user.id,
         query=body.query,
     )
-    return {"query": body.query, "results": results}
+    return {
+        "query": body.query,
+        "answer": results.get("answer", ""),
+        "results": results.get("results", []),
+    }

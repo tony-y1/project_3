@@ -4,7 +4,8 @@
 import io
 import time
 import logging
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, OpenAIError
+from fastapi import HTTPException
 from app.config import get_settings
 from app.services.redis_service import get_tts_cache, set_tts_cache
 
@@ -24,12 +25,16 @@ class TTSService:
                 return cached
 
         start = time.time()
-        response = await client.audio.speech.create(
-            model="tts-1",
-            voice="nova", 
-            input=text,
-            response_format="mp3",#wav
-        )
+        try:
+            response = await client.audio.speech.create(
+                model="tts-1",
+                voice="nova",
+                input=text,
+                response_format="mp3",#wav
+            )
+        except OpenAIError as e:
+            logger.error(f"TTS 오류: {e}")
+            raise HTTPException(status_code=503, detail="음성 합성 서비스에 문제가 발생했어요.")
         # voice
         # │ alloy   │ 중성적, 차분                  
         # │ nova    │ 여성적, 따뜻함 

@@ -2,7 +2,8 @@
 # OpenAI GPT 스트리밍
 import time
 import logging
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, OpenAIError
+from fastapi import HTTPException
 from typing import AsyncGenerator
 from app.config import get_settings
 
@@ -21,42 +22,61 @@ class GPTService:
         t_start = time.time()
         logger.info("GPT 스트리밍 시작")
 
-        stream = await client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": persona_prompt},
-                {"role": "user",   "content": diary_content},
-            ],
-            stream=True,
-            max_tokens=300,  # 2~3문장 이내 제한
-        )
+        try:
+            stream = await client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": persona_prompt},
+                    {"role": "user",   "content": diary_content},
+                ],
+                stream=True,
+                max_tokens=300,  # 2~3문장 이내 제한
+            )
+        except OpenAIError as e:
+            logger.error(f"GPT 스트리밍 시작 오류: {e}")
+            raise HTTPException(status_code=503, detail="AI 서비스에 문제가 발생했어요.")
 
         t_first_chunk = None
         buffer = ""
         sentence_count = 0
-        async for chunk in stream:
-            delta = chunk.choices[0].delta.content or ""
-            # 첫 청크 도착 시간
-            if delta and t_first_chunk is None:
-                t_first_chunk = time.time()
-                logger.info(f"GPT 첫 청크 도착: {t_first_chunk - t_start:.2f}s")
+        try:
+            async for chunk in stream:
+                delta = chunk.choices[0].delta.content or ""
+                # 첫 청크 도착 시간
+                if delta and t_first_chunk is None:
+                    t_first_chunk = time.time()
+                    logger.info(f"GPT 첫 청크 도착: {t_first_chunk - t_start:.2f}s")
 
-            buffer += delta
+                buffer += delta
 
-            # 문장 단위로 끊어서 yield
-            while any(p in buffer for p in (".", "!", "?", "~")):
-                for punct in (".", "!", "?", "~"):
-                    idx = buffer.find(punct)
-                    if idx != -1:
-                        sentence = buffer[:idx + 1].strip()
-                        buffer = buffer[idx + 1:].lstrip()
+                # 문장 단위로 끊어서 yield
+                while True:
+                    candidates = []
+                    for punct in (".", "!", "?", "~"):
+                        idx = buffer.find(punct)
+                        if idx == -1:
+                            continue
+                        # ~ 는 뒤에 공백이거나 버퍼 마지막일 때만 종결로 처리
+                        if punct == "~" and not (idx + 1 >= len(buffer) or buffer[idx + 1] == " "):
+                            continue
+                        candidates.append((idx, punct))
 
-                        t_sentence = time.time()
-                        sentence_count += 1
-                        logger.info(f"문장 {sentence_count} 생성: {t_sentence - t_start:.2f}s | {sentence}")
-
-                        yield sentence
+                    if not candidates:
                         break
+
+                    idx, punct = min(candidates, key=lambda x: x[0])
+                    sentence = buffer[:idx + 1].strip()
+                    buffer = buffer[idx + 1:].lstrip()
+
+                    t_sentence = time.time()
+                    sentence_count += 1
+                    logger.info(f"문장 {sentence_count} 생성: {t_sentence - t_start:.2f}s | {sentence}")
+
+                    yield sentence
+        except OpenAIError as e:
+            # 스트리밍 중 오류 — 헤더가 이미 전송됐으므로 로그만 남기고 중단
+            logger.error(f"GPT 스트리밍 중 오류: {e}")
+            return
 
         # 남은 텍스트 처리
         if buffer.strip():

@@ -63,9 +63,12 @@ const stt = (() => {
             setRecordingState(false);
             return;
         }
-        ws = new WebSocket(`ws://localhost:8000/api/v1/voice/ws/stt?token=${encodeURIComponent(token)}`);
+        ws = new WebSocket(`ws://localhost:8000/api/v1/voice/ws/stt`);
 
-        ws.onopen = () => console.log("STT WebSocket 연결됨");
+        ws.onopen = () => {
+            console.log("STT WebSocket 연결됨");
+            ws.send(JSON.stringify({ token }));
+        };
         ws.onmessage = (e) => {
             const data = JSON.parse(e.data);
             if (data.type === "partial") {

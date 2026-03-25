@@ -6,7 +6,8 @@
 import io
 import logging
 import azure.cognitiveservices.speech as speechsdk
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, OpenAIError
+from fastapi import HTTPException
 from app.config import get_settings
 
 settings = get_settings()
@@ -24,11 +25,15 @@ class STTService:
         audio_file = io.BytesIO(audio_bytes)
         audio_file.name = filename
 
-        response = await client.audio.transcriptions.create(
-            model="whisper-1",
-            file=audio_file,
-            language=language,
-        )
+        try:
+            response = await client.audio.transcriptions.create(
+                model="whisper-1",
+                file=audio_file,
+                language=language,
+            )
+        except OpenAIError as e:
+            logger.error(f"STT 오류: {e}")
+            raise HTTPException(status_code=503, detail="음성 인식 서비스에 문제가 발생했어요.")
         return response.text
     # 2
     def create_azure_recognizer(self) -> speechsdk.SpeechRecognizer:

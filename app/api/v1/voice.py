@@ -3,7 +3,7 @@
 # (O): POST /tts         - 텍스트 → 음성 파일 (OpenAI TTS)  
 # (O): POST /tts/stream  - GPT 응답 스트리밍 → TTS 파이프라인
 
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Query
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from fastapi.responses import StreamingResponse, Response
 from fastapi import WebSocket, WebSocketDisconnect  # azure websocket 통신을 위해 추가
 import asyncio                                      # 비동기 이벤트 루프 처리를 위해 추가
@@ -40,11 +40,19 @@ class StreamFeedbackRequest(BaseModel):
 @router.post("/stt", response_model=STTResponse)
 async def speech_to_text(file: UploadFile = File(...), current_user=Depends(get_current_user)):
     # 지원 포맷 확인
+    # 브라우저는 "audio/webm;codecs=opus" 처럼 codecs 파라미터를 붙여 보내는 경우가 있어
+    # 세미콜론 앞 mime type 부분만 추출해서 비교함
     allowed = {"audio/webm", "audio/wav", "audio/mp4", "audio/mpeg"}
-    if file.content_type not in allowed:
+    mime_type = (file.content_type or "").split(";")[0].strip()
+    if mime_type not in allowed:
         raise HTTPException(status_code=400, detail=f"지원하지 않는 포맷: {file.content_type}")
 
+    # Whisper API 제한(25MB) 이전에 서버에서 먼저 차단
+    MAX_SIZE = 10 * 1024 * 1024  # 10MB
     audio_bytes = await file.read()
+    if len(audio_bytes) > MAX_SIZE:
+        raise HTTPException(status_code=413, detail="파일 크기는 10MB 이하여야 해요.")
+
     transcript = await stt_service.transcribe(
         audio_bytes=audio_bytes,
         filename=file.filename or "audio.webm",
@@ -96,42 +104,48 @@ async def tts_cache_stats(current_user=Depends(get_current_user)):
 
 # ── WebSocket STT: 실시간 스트리밍 ───────────────────────
 @router.websocket("/ws/stt")
-async def websocket_stt(websocket: WebSocket, token: str = Query(...)):
-    if not decode_access_token(token):
+async def websocket_stt(websocket: WebSocket):
+    await websocket.accept()
+
+    # 토큰을 URL이 아닌 첫 메시지로 수신 (URL 노출 방지)
+    data = await websocket.receive_json()
+    token = data.get("token")
+    if not token or not decode_access_token(token):
         await websocket.close(code=4001)
         return
 
-    await websocket.accept()
     logger.info("WebSocket STT 연결됨")
 
     recognizer, stream = stt_service.create_azure_recognizer()
-    loop = asyncio.get_event_loop()
+    # get_event_loop()는 3.10+ deprecated — 현재 실행 중인 루프를 명시적으로 가져옴
+    loop = asyncio.get_running_loop()
+
+    async def safe_send(data: dict):
+        # Azure 콜백은 별도 스레드에서 실행되므로 send_json을 직접 호출할 수 없어
+        # call_soon_threadsafe + ensure_future로 이벤트 루프에 예약함.
+        # 예약 후 실제 실행 시점에 WebSocket이 이미 닫혀 있을 수 있으므로
+        # 예외를 여기서 잡아 조용히 무시함.
+        try:
+            await websocket.send_json(data)
+        except Exception:
+            pass
 
     # 중간 결과 (말하는 중)
     def on_recognizing(evt):
         logger.info(f"인식 중: {evt.result.text}")
-        loop.call_soon_threadsafe(
-            asyncio.ensure_future,
-            websocket.send_json({"type": "partial", "text": evt.result.text})
-        )
+        loop.call_soon_threadsafe(asyncio.ensure_future, safe_send({"type": "partial", "text": evt.result.text}))
 
     # 최종 결과 (문장 완성)
     def on_recognized(evt):
         logger.info(f"인식 완료: {evt.result.text}")
         if evt.result.text:
-            loop.call_soon_threadsafe(
-                asyncio.ensure_future,
-                websocket.send_json({"type": "final", "text": evt.result.text})
-            )
+            loop.call_soon_threadsafe(asyncio.ensure_future, safe_send({"type": "final", "text": evt.result.text}))
 
     # 취소/에러
     def on_canceled(evt):
         logger.error(f"Azure STT 취소됨: {evt.result.reason}")
         logger.error(f"에러 상세: {evt.result.cancellation_details}")
-        loop.call_soon_threadsafe(
-            asyncio.ensure_future,
-            websocket.send_json({"type": "error", "text": "음성 인식 오류가 발생했어요."})
-        )
+        loop.call_soon_threadsafe(asyncio.ensure_future, safe_send({"type": "error", "text": "음성 인식 오류가 발생했어요."}))
 
     recognizer.recognizing.connect(on_recognizing)
     recognizer.recognized.connect(on_recognized)
