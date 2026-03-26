@@ -1,5 +1,18 @@
 // 담당: 정원님 - 알람 및 Web Push 관련 기능
 
+const DAY_KOR = {
+  MON: "월요일", TUE: "화요일", WED: "수요일",
+  THU: "목요일", FRI: "금요일", SAT: "토요일", SUN: "일요일",
+};
+const ALL_DAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+
+function formatDaysKorean(repeatDaysStr) {
+  if (!repeatDaysStr) return "-";
+  const days = repeatDaysStr.split(",").map((d) => d.trim());
+  if (days.length === 7) return "매일";
+  return days.map((d) => DAY_KOR[d] || d).join(", ");
+}
+
 function getAccessToken() {
   const inputEl = document.getElementById("token-input");
   // test/alarm.html 테스트 편하려고 만든 부분, 다른데서는 사용X
@@ -27,19 +40,38 @@ async function requestAlarmNotificationPermission() {
 
 // 선택된 요일 목록 반환
 function getSelectedRepeatDays() {
-  const dayCheckboxMap = {
-    MON: document.getElementById("day-mon"),
-    TUE: document.getElementById("day-tue"),
-    WED: document.getElementById("day-wed"),
-    THU: document.getElementById("day-thu"),
-    FRI: document.getElementById("day-fri"),
-    SAT: document.getElementById("day-sat"),
-    SUN: document.getElementById("day-sun"),
+  const dayIdMap = {
+    MON: "day-mon", TUE: "day-tue", WED: "day-wed",
+    THU: "day-thu", FRI: "day-fri", SAT: "day-sat", SUN: "day-sun",
   };
 
-  return Object.entries(dayCheckboxMap)
-    .filter(([, checkbox]) => checkbox && checkbox.checked)
+  return Object.entries(dayIdMap)
+    .filter(([, id]) => document.getElementById(id)?.classList.contains("is-active"))
     .map(([day]) => day);
+}
+
+// 매일 버튼 ↔ 개별 요일 버튼 연동
+function setupDayAllToggle() {
+  const allBtn = document.getElementById("day-all");
+  const dayIds = ALL_DAYS.map((d) => `day-${d.toLowerCase()}`);
+
+  if (!allBtn) return;
+
+  allBtn.addEventListener("click", () => {
+    const isActive = allBtn.classList.toggle("is-active");
+    dayIds.forEach((id) => {
+      document.getElementById(id)?.classList.toggle("is-active", isActive);
+    });
+  });
+
+  dayIds.forEach((id) => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.addEventListener("click", () => {
+      btn.classList.toggle("is-active");
+      allBtn.classList.toggle("is-active", dayIds.every((i) => document.getElementById(i)?.classList.contains("is-active")));
+    });
+  });
 }
 
 // 일반 브라우저 알림 표시
@@ -68,6 +100,36 @@ function showAlarmNotification(alarm) {
   };
 }
 
+// 현재 수정 중인 알람 ID (null이면 신규 생성 모드)
+let editingAlarmId = null;
+
+function showAlarmListView() {
+  document.getElementById("alarm-view-list")?.classList.remove("hidden");
+  document.getElementById("alarm-view-form")?.classList.add("hidden");
+  editingAlarmId = null;
+}
+
+function showAlarmFormView(mode) {
+  document.getElementById("alarm-view-list")?.classList.add("hidden");
+  document.getElementById("alarm-view-form")?.classList.remove("hidden");
+
+  const title = document.getElementById("alarm-form-title");
+  if (title) title.textContent = mode === "edit" ? "알람 수정" : "알람 추가";
+
+  if (mode === "create") {
+    const timeInput = document.getElementById("alarm-time");
+    if (timeInput) timeInput.value = "";
+
+    ALL_DAYS.forEach((d) => {
+      document.getElementById(`day-${d.toLowerCase()}`)?.classList.remove("is-active");
+    });
+    document.getElementById("day-all")?.classList.remove("is-active");
+
+    const enabledCb = document.getElementById("alarm-enabled");
+    if (enabledCb) enabledCb.checked = true;
+  }
+}
+
 // 알람 목록 화면 렌더링
 function renderAlarmList(alarms) {
   const alarmListEl = document.getElementById("alarm-list");
@@ -82,19 +144,62 @@ function renderAlarmList(alarms) {
 
   alarms.forEach((alarm) => {
     const item = document.createElement("div");
-    item.style.border = "1px solid #ccc";
-    item.style.borderRadius = "10px";
-    item.style.padding = "12px";
-    item.style.marginBottom = "12px";
+    item.className = "profile-alarm-row";
+
+    const korDays = formatDaysKorean(alarm.repeat_days);
+    const timeDisplay = alarm.alarm_time.slice(0, 5);
 
     item.innerHTML = `
-      <p><strong>시간:</strong> ${alarm.alarm_time}</p>
-      <p><strong>요일:</strong> ${alarm.repeat_days || "-"}</p>
-      <p><strong>상태:</strong> ${alarm.is_enabled ? "활성" : "비활성"}</p>
+      <div>
+        <p class="profile-calendar-caption" style="margin-bottom:4px;">Alarm</p>
+        <p class="profile-alarm-item-time">${timeDisplay}</p>
+        <p class="profile-alarm-item-days">${korDays}</p>
+      </div>
+      <div class="profile-alarm-item-actions">
+        <button type="button" data-alarm-id="${alarm.id}" class="edit-alarm-btn profile-calendar-nav">수정</button>
+      </div>
     `;
 
     alarmListEl.appendChild(item);
   });
+
+  // 수정 버튼 이벤트 등록
+  alarmListEl.querySelectorAll(".edit-alarm-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const alarmId = parseInt(btn.dataset.alarmId);
+      const alarm = alarms.find((a) => a.id === alarmId);
+      if (alarm) fillFormForEdit(alarm);
+    });
+  });
+}
+
+// 폼에 기존 알람 데이터를 채우고 수정 모드로 전환
+function fillFormForEdit(alarm) {
+  editingAlarmId = alarm.id;
+
+  const alarmTimeInput = document.getElementById("alarm-time");
+  // 시간 설정 (HH:MM:SS → HH:MM)
+  if (alarmTimeInput) {
+    alarmTimeInput.value = alarm.alarm_time.slice(0, 5);
+  }
+
+  // 요일 버튼 상태 설정
+  const dayIdMap = { MON: "day-mon", TUE: "day-tue", WED: "day-wed", THU: "day-thu", FRI: "day-fri", SAT: "day-sat", SUN: "day-sun" };
+  const activeDays = alarm.repeat_days ? alarm.repeat_days.split(",").map((d) => d.trim()) : [];
+
+  ALL_DAYS.forEach((day) => {
+    const btn = document.getElementById(dayIdMap[day]);
+    if (btn) btn.classList.toggle("is-active", activeDays.includes(day));
+  });
+
+  // 매일 버튼 상태 동기화
+  const allBtn = document.getElementById("day-all");
+  if (allBtn) allBtn.classList.toggle("is-active", activeDays.length === 7);
+
+  const alarmEnabledInput = document.getElementById("alarm-enabled");
+  if (alarmEnabledInput) alarmEnabledInput.checked = alarm.is_enabled;
+
+  showAlarmFormView("edit");
 }
 
 // 알람 목록 조회
@@ -133,12 +238,10 @@ async function loadAlarms() {
   }
 }
 
-// 알람 저장
+// 알람 저장 (신규: POST / 수정: PUT)
 async function saveAlarm() {
   const token = getAccessToken();
   const alarmTimeInput = document.getElementById("alarm-time");
-  const alarmEnabledInput = document.getElementById("alarm-enabled");
-
   if (!token) {
     alert("로그인이 필요합니다.");
     return;
@@ -159,12 +262,16 @@ async function saveAlarm() {
   const body = {
     alarm_time: `${alarmTimeInput.value}:00`,
     repeat_days: repeatDays,
-    is_enabled: alarmEnabledInput ? alarmEnabledInput.checked : true,
+    is_enabled: true,
   };
 
+  const isEditMode = editingAlarmId !== null;
+  const url = isEditMode ? `/api/v1/alarms/${editingAlarmId}` : "/api/v1/alarms/";
+  const method = isEditMode ? "PUT" : "POST";
+
   try {
-    const response = await fetch("/api/v1/alarms/", {
-      method: "POST",
+    const response = await fetch(url, {
+      method,
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -175,14 +282,16 @@ async function saveAlarm() {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`알람 저장 실패: ${response.status} / ${errorText}`);
+      throw new Error(`알람 ${isEditMode ? "수정" : "저장"} 실패: ${response.status} / ${errorText}`);
     }
 
     await response.json();
-    alert("알람이 저장되었습니다.");
+    alert(isEditMode ? "알람이 수정되었습니다." : "알람이 저장되었습니다.");
+
+    showAlarmListView();
     await loadAlarms();
   } catch (error) {
-    console.error("알람 저장 실패:", error);
+    console.error("알람 저장/수정 실패:", error);
     alert("알람 저장에 실패했습니다.");
   }
 }
@@ -302,8 +411,7 @@ async function checkDueAlarmsForNotification() {
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
-  const saveAlarmBtn = document.getElementById("save-alarm-btn");
-  const loadAlarmsBtn = document.getElementById("load-alarms-btn");
+  setupDayAllToggle();
 
   const registration = await registerServiceWorker();
   await requestAlarmNotificationPermission();
@@ -312,13 +420,10 @@ window.addEventListener("DOMContentLoaded", async () => {
     await subscribePush(registration);
   }
 
-  if (saveAlarmBtn) {
-    saveAlarmBtn.addEventListener("click", saveAlarm);
-  }
-
-  if (loadAlarmsBtn) {
-    loadAlarmsBtn.addEventListener("click", loadAlarms);
-  }
+  document.getElementById("save-alarm-btn")?.addEventListener("click", saveAlarm);
+  document.getElementById("add-alarm-btn")?.addEventListener("click", () => showAlarmFormView("create"));
+  document.getElementById("back-to-list-btn")?.addEventListener("click", showAlarmListView);
+  document.getElementById("cancel-alarm-btn")?.addEventListener("click", showAlarmListView);
 
   await loadAlarms();
   // 폴링 방식 주석처리 - web push 동작만 사용하도록 변경

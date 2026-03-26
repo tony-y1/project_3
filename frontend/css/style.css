@@ -362,6 +362,93 @@ html, body {
     transform: translateX(21px);
 }
 
+.profile-alarm-item-time {
+    color: #ffffff;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1;
+}
+
+.profile-alarm-item-days {
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+.profile-alarm-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    grid-column: 3;
+    justify-self: end;
+}
+
+.profile-day-pill {
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.5);
+    border-radius: 999px;
+    padding: 10px 18px;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.profile-day-pill:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.profile-day-pill.is-active {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #ffffff;
+}
+
+.profile-day-pill-all {
+    font-weight: 600;
+}
+
+.profile-alarm-time-input {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+    padding: 8px 16px;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    outline: none;
+    transition: border-color 0.2s ease;
+    cursor: pointer;
+    width: fit-content;
+}
+
+.profile-alarm-time-input:focus {
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.alarm-time-large {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    font-size: 56px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    outline: none;
+    text-align: center;
+    padding: 8px 20px;
+    transition: border-color 0.2s ease;
+    cursor: pointer;
+}
+
+.alarm-time-large:focus {
+    border-bottom-color: rgba(255, 255, 255, 0.6);
+}
+
 .profile-alarm-time {
     width: 100%;
     background: rgba(255, 255, 255, 0.1);
