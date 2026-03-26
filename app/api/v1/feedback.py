@@ -90,7 +90,42 @@ async def create_feedback(
         custom_description=custom_description,
     )
     return {"diary_id": str(diary_id), "feedback_text": feedback.feedback_text}
+# ── PUT /feedback/{diary_id}/regenerate ─ 피드백 재생성
+@router.put("/{diary_id}/regenerate")
+async def regenerate_feedback(
+    diary_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    기존 피드백을 삭제하고 새로운 AI 피드백을 생성합니다.
+    '반응이 마음에 안드시면 여기를 눌러주세요!' 버튼 클릭 시 호출됩니다.
+    """
+    diary = await _get_diary_or_404(diary_id, current_user.id, db)
+    persona = await _get_persona(diary.persona_id, db)
 
+    persona_name = persona.name if persona else "말벗"
+    preset_type = persona.preset_type if persona else "empathy"
+    custom_description = persona.custom_description if persona else None
+
+    # 기존 피드백 삭제
+    existing = await feedback_svc.get_feedback(db, diary_id)
+    if existing:
+        await db.delete(existing)
+        await db.commit()
+
+    # 새 피드백 생성
+    feedback = await feedback_svc.create_feedback(
+        db=db,
+        diary_id=diary_id,
+        user_id=current_user.id,
+        persona_id=diary.persona_id,
+        diary_content=diary.content,
+        persona_name=persona_name,
+        preset_type=preset_type,
+        custom_description=custom_description,
+    )
+    return {"diary_id": str(diary_id), "feedback_text": feedback.feedback_text}
 # ── GET /feedback/{diary_id} ─ 저장된 피드백 조회
 @router.get("/{diary_id}")
 async def get_feedback(
