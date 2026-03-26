@@ -1567,6 +1567,104 @@ html, body {
     outline: none;
 }
 
+/* Custom Select */
+.custom-select-wrapper {
+    position: relative;
+}
+
+.custom-select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+    background-image: none !important;
+    padding-right: 16px !important;
+}
+
+.custom-select-trigger:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.custom-select-arrow {
+    flex-shrink: 0;
+    margin-left: 8px;
+    opacity: 0.6;
+    transition: transform 0.2s ease;
+    display: flex;
+    align-items: center;
+}
+
+.custom-select-wrapper.is-open .custom-select-arrow {
+    transform: rotate(180deg);
+}
+
+.custom-select-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 200;
+    background: rgba(28, 28, 38, 0.97);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 14px;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.22s ease, opacity 0.15s ease;
+    pointer-events: none;
+}
+
+.custom-select-wrapper.is-open .custom-select-dropdown {
+    max-height: 240px;
+    opacity: 1;
+    pointer-events: auto;
+    overflow-y: auto;
+}
+
+.custom-select-dropdown::-webkit-scrollbar {
+    width: 4px;
+}
+
+.custom-select-dropdown::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-select-dropdown::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 99px;
+}
+
+.custom-select-option {
+    padding: 12px 16px;
+    color: rgba(255, 255, 255, 0.85);
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.12s ease;
+}
+
+.custom-select-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.custom-select-option.is-selected {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.custom-select-wrapper.is-disabled .custom-select-trigger {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 .ai-preview-title {
     color: #ffffff;
     font-size: 12px;
