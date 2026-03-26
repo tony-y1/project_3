@@ -183,7 +183,6 @@ async function handleDiaryCreateSubmit(event) {
             hashtags: [],
             persona_id: personaSelect?.value || null,
         });
-        // window.location.href = `diary_read.html?id=${encodeURIComponent(diary.id)}`;
         const autoplay = document.getElementById("ai-autoplay-toggle")?.classList.contains("is-on") ? "1" : "0";
         window.location.href = `diary_read.html?id=${encodeURIComponent(diary.id)}&autoplay=${autoplay}`;
 
@@ -206,9 +205,6 @@ function initDiaryListPage() {
 
 function initDiaryDetailPage() {
     const form = document.getElementById("diary-create-form");
-    // const autoSummaryToggle = document.getElementById("ai-auto-summary-toggle");
-    // const autoSummaryState = document.getElementById("ai-auto-summary-state");
-    // const manualSummaryButton = document.getElementById("ai-manual-summary-button");
     const personaSelect = document.getElementById("diary-persona-select");
 
     if (!form) {
@@ -221,18 +217,7 @@ function initDiaryDetailPage() {
     }
 
     populatePersonaSelect(personaSelect);
-
     populatePersonaSelect(personaSelect);
-
-    // if (autoSummaryToggle && autoSummaryState && manualSummaryButton) {
-    //     autoSummaryToggle.addEventListener("click", () => {
-    //         const isOn = autoSummaryToggle.classList.contains("is-on");
-    //         autoSummaryToggle.classList.toggle("is-on", !isOn);
-    //         autoSummaryToggle.setAttribute("aria-pressed", String(!isOn));
-    //         autoSummaryState.textContent = isOn ? "OFF" : "ON";
-    //         manualSummaryButton.classList.toggle("hidden", !isOn);
-    //     });
-    // }
 
     const autoplayToggle = document.getElementById("ai-autoplay-toggle");
     const autoplayState = document.getElementById("ai-autoplay-state");
@@ -288,6 +273,15 @@ async function initDiaryReadPage() {
         contentEl.value = diary.content || "";
         await populatePersonaSelect(personaSelect, diary.persona_id || "");
         setDiaryReadOnly(fields, true);
+
+// --- 여기부터 수정한 코드 ---
+        if (personaSelect && !diary.persona_id) {
+            const defaultOption = personaSelect.querySelector('option[value=""]');
+            if (defaultOption) {
+                defaultOption.textContent = "기본 말벗";
+            }
+        }
+// --- 여기까지 수정한 코드 ---
 
         // 피드백 조회 + TTS 버튼 연결
         try {

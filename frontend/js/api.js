@@ -19,8 +19,11 @@ async function apiRequest(path, options = {}) {
     if (response.status === 401) {
         localStorage.removeItem("access_token");
         localStorage.removeItem("auth_user");
-        window.location.href = "login.html";
-        return;
+
+        if (path !== "/auth/login") {
+            window.location.href = "login.html";
+            return new Promise(() => {});
+        }
     }
 
     const contentType = response.headers.get("content-type") || "";

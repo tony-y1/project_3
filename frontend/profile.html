@@ -184,50 +184,53 @@
                                         <p class="profile-calendar-caption">Alarm settings</p>
                                         <h2 class="profile-hero-title text-2xl font-semibold">알람 설정</h2>
                                     </div>
-                                    <button id="profile-alarm-save" type="button" class="profile-calendar-nav">저장</button>
                                 </div>
 
-                                <p class="profile-alarm-copy">요일별로 원하는 시간을 정하고 알람을 켤 수 있어요.</p>
+                                <p class="profile-alarm-copy mb-6">시간과 반복 요일을 선택해 알람을 등록하세요.</p>
 
-                                <div class="profile-alarm-list">
-                                    <div class="profile-alarm-row" data-day="sun">
-                                        <span class="profile-alarm-day">일요일</span>
-                                        <label class="profile-alarm-switch"><input type="checkbox" class="profile-alarm-enabled"><span class="profile-alarm-switch-ui"></span></label>
-                                        <input type="time" class="profile-alarm-time" value="08:00">
+                                <div class="profile-alarm-form flex flex-col gap-6 mb-8 p-6 bg-white/5 rounded-xl border border-white/10">
+                                    
+                                    <div class="form-group flex flex-col gap-2">
+                                        <label for="alarm-time" class="text-white/80 text-sm font-medium">알람 시간</label>
+                                        <input type="time" id="alarm-time" class="profile-alarm-time bg-[#1a0e14] text-white border border-white/20 rounded p-2 w-32 focus:outline-none focus:border-white/50" />
                                     </div>
-                                    <div class="profile-alarm-row" data-day="mon">
-                                        <span class="profile-alarm-day">월요일</span>
-                                        <label class="profile-alarm-switch"><input type="checkbox" class="profile-alarm-enabled"><span class="profile-alarm-switch-ui"></span></label>
-                                        <input type="time" class="profile-alarm-time" value="08:00">
+
+                                    <div class="form-group flex flex-col gap-2">
+                                        <label class="text-white/80 text-sm font-medium">반복 요일</label>
+                                        <div class="weekday-group flex gap-4 flex-wrap text-white/90">
+                                            <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="day-mon" value="MON" class="accent-pink-500 w-4 h-4" /> 월</label>
+                                            <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="day-tue" value="TUE" class="accent-pink-500 w-4 h-4" /> 화</label>
+                                            <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="day-wed" value="WED" class="accent-pink-500 w-4 h-4" /> 수</label>
+                                            <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="day-thu" value="THU" class="accent-pink-500 w-4 h-4" /> 목</label>
+                                            <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="day-fri" value="FRI" class="accent-pink-500 w-4 h-4" /> 금</label>
+                                            <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="day-sat" value="SAT" class="accent-pink-500 w-4 h-4" /> 토</label>
+                                            <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="day-sun" value="SUN" class="accent-pink-500 w-4 h-4" /> 일</label>
+                                        </div>
                                     </div>
-                                    <div class="profile-alarm-row" data-day="tue">
-                                        <span class="profile-alarm-day">화요일</span>
-                                        <label class="profile-alarm-switch"><input type="checkbox" class="profile-alarm-enabled"><span class="profile-alarm-switch-ui"></span></label>
-                                        <input type="time" class="profile-alarm-time" value="08:00">
+
+                                    <div class="form-group flex items-center mt-2">
+                                        <label class="profile-alarm-switch flex items-center gap-3 cursor-pointer text-white/90">
+                                            <input type="checkbox" id="alarm-enabled" class="profile-alarm-enabled hidden" checked />
+                                            <span class="profile-alarm-switch-ui inline-block w-10 h-6 bg-white/20 rounded-full relative transition-colors duration-300"></span>
+                                            <span class="text-sm">알람 활성화</span>
+                                        </label>
                                     </div>
-                                    <div class="profile-alarm-row" data-day="wed">
-                                        <span class="profile-alarm-day">수요일</span>
-                                        <label class="profile-alarm-switch"><input type="checkbox" class="profile-alarm-enabled"><span class="profile-alarm-switch-ui"></span></label>
-                                        <input type="time" class="profile-alarm-time" value="08:00">
-                                    </div>
-                                    <div class="profile-alarm-row" data-day="thu">
-                                        <span class="profile-alarm-day">목요일</span>
-                                        <label class="profile-alarm-switch"><input type="checkbox" class="profile-alarm-enabled"><span class="profile-alarm-switch-ui"></span></label>
-                                        <input type="time" class="profile-alarm-time" value="08:00">
-                                    </div>
-                                    <div class="profile-alarm-row" data-day="fri">
-                                        <span class="profile-alarm-day">금요일</span>
-                                        <label class="profile-alarm-switch"><input type="checkbox" class="profile-alarm-enabled"><span class="profile-alarm-switch-ui"></span></label>
-                                        <input type="time" class="profile-alarm-time" value="08:00">
-                                    </div>
-                                    <div class="profile-alarm-row" data-day="sat">
-                                        <span class="profile-alarm-day">토요일</span>
-                                        <label class="profile-alarm-switch"><input type="checkbox" class="profile-alarm-enabled"><span class="profile-alarm-switch-ui"></span></label>
-                                        <input type="time" class="profile-alarm-time" value="08:00">
+
+                                    <div class="button-group flex gap-3 mt-4">
+                                        <button type="button" id="save-alarm-btn" class="profile-calendar-nav px-5 py-2.5 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors duration-300 text-sm">알람 저장</button>
+                                        <button type="button" id="load-alarms-btn" class="profile-calendar-nav px-5 py-2.5 bg-transparent border border-white/20 hover:bg-white/5 rounded-lg text-white transition-colors duration-300 text-sm">목록 새로고침</button>
                                     </div>
                                 </div>
 
-                                <p id="profile-alarm-message" class="profile-alarm-message hidden"></p>
+                                <div class="profile-hero-line my-8 opacity-30"></div>
+
+                                <section class="profile-alarm-list-wrapper">
+                                    <h3 class="text-lg font-semibold text-white mb-4">등록된 알람</h3>
+                                    <div id="alarm-list" class="flex flex-col gap-3 text-white/80 text-sm">
+                                        <p>등록된 알람이 없습니다.</p>
+                                    </div>
+                                </section>
+
                             </section>
                         </div>
                     </section>
@@ -240,5 +243,6 @@
     <script src="js/api.js"></script>
     <script src="js/frontend.js"></script>
     <script src="js/auth.js"></script>
+    <script src="js/alarm.js"></script>
 </body>
 </html>

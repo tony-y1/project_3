@@ -9,7 +9,8 @@ function setMessage(element, message, isError = false) {
 
     element.textContent = message;
     element.classList.remove("hidden");
-    element.style.color = isError ? "#561C24" : "#6B8F5E";
+    // 다크 배경에서 눈에 띄도록 에러일 경우 밝은 빨간색으로 표시합니다.
+    element.style.color = isError ? "#ff4d4d" : "#6B8F5E";
 }
 
 function clearMessage(element) {
@@ -157,9 +158,9 @@ function checkPasswordMatch() {
     }
 
     msg.textContent = "Passwords do not match.";
-    msg.style.color = "#561C24";
+    msg.style.color = "#ff4d4d";
     msg.classList.remove("hidden");
-    confirmInput.style.borderColor = "#561C24";
+    confirmInput.style.borderColor = "#ff4d4d";
     return false;
 }
 
@@ -178,7 +179,7 @@ async function register(userData) {
 }
 
 async function handleLoginSubmit(event) {
-    event.preventDefault();
+    event.preventDefault(); // 여기서 폼 제출 새로고침을 완벽하게 1차 차단합니다.
 
     const usernameInput = document.getElementById("login-username");
     const passwordInput = document.getElementById("login-password");
@@ -191,7 +192,7 @@ async function handleLoginSubmit(event) {
     const password = passwordInput?.value || "";
 
     if (!username || !password) {
-        setMessage(message, "Please enter your ID and password.", true);
+        setMessage(message, "아이디와 비밀번호를 모두 입력해주세요.", true);
         return;
     }
 
@@ -200,12 +201,13 @@ async function handleLoginSubmit(event) {
     try {
         const result = await login(username, password);
         saveAuth(result.access_token, result.user);
-        setMessage(message, "Login successful. Redirecting...");
+        setMessage(message, "로그인 성공! 이동 중...", false);
         window.setTimeout(() => {
             window.location.href = "profile.html";
         }, 500);
     } catch (error) {
-        setMessage(message, error.message || "Login failed.", true);
+        // api.js의 수정 덕분에 여기로 무사히 넘어와서 빨간색 에러 메시지를 띄우게 됩니다.
+        setMessage(message, "아이디 또는 비밀번호가 잘못되었습니다.", true);
     } finally {
         setButtonLoading(submitButton, false, "Sign In", "Signing In...");
     }
@@ -227,12 +229,12 @@ async function handleSignupSubmit(event) {
     const password = passwordInput?.value || "";
 
     if (!nickname || !username || !password) {
-        setMessage(message, "Please fill out all fields.", true);
+        setMessage(message, "모든 항목을 입력해주세요.", true);
         return;
     }
 
     if (!checkPasswordMatch()) {
-        setMessage(message, "Password confirmation does not match.", true);
+        setMessage(message, "비밀번호 확인이 일치하지 않습니다.", true);
         return;
     }
 
@@ -240,7 +242,7 @@ async function handleSignupSubmit(event) {
 
     try {
         await register({ nickname, username, password });
-        setMessage(message, "Sign-up complete. Please log in.");
+        setMessage(message, "회원가입이 완료되었습니다. 로그인해주세요.", false);
         event.target.reset();
 
         const pwMessage = document.getElementById("password-match-msg");
@@ -254,7 +256,7 @@ async function handleSignupSubmit(event) {
         toggleForm("login");
         document.getElementById("login-username")?.focus();
     } catch (error) {
-        setMessage(message, error.message || "Sign-up failed.", true);
+        setMessage(message, error.message || "회원가입에 실패했습니다.", true);
     } finally {
         setButtonLoading(submitButton, false, "Join Us", "Joining...");
     }
