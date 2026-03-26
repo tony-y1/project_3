@@ -1,4 +1,5 @@
 self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", (event) => event.waitUntil(clients.claim()));
 
 // 서버에서 전송한 push 이벤트를 받아 브라우저 알림으로 표시
 self.addEventListener("push", (event) => {
@@ -23,6 +24,8 @@ self.addEventListener("push", (event) => {
     self.registration.showNotification(title, options)
   );
 });
+
+// WEB PUSH 알림 일 경우 사용됨
   // 알람 수정한거 바로 적용 안되는 case의 경우
   // 1. 개발자도구(F12) → Application 탭
   // 2. 좌측 Service Workers 클릭
@@ -32,10 +35,13 @@ self.addEventListener("notificationclick", (event) => {
   console.log("notificationclick 발생");
   event.notification.close();
   event.waitUntil(
-    clients.openWindow("/diary_write.html").then(() => {
-      console.log("openWindow 성공");
-    }).catch((err) => {
-      console.error("openWindow 실패:", err);
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && "focus" in client) {
+          return client.focus();
+        }
+      }
+      return clients.openWindow("/diary_write.html");
     })
   );
 });

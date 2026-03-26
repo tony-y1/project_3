@@ -1,6 +1,11 @@
 // 담당: 정원님 - 알람 및 Web Push 관련 기능
 
 function getAccessToken() {
+  const inputEl = document.getElementById("token-input");
+  // test/alarm.html 테스트 편하려고 만든 부분, 다른데서는 사용X
+  if (inputEl && inputEl.value.trim()) {
+    return inputEl.value.trim();
+  }
   return localStorage.getItem("access_token");
 }
 
@@ -38,6 +43,7 @@ function getSelectedRepeatDays() {
 }
 
 // 일반 브라우저 알림 표시
+// 폴링 방식, 호출안되게 상위에서 주석처리되어있음 : checkDueAlarmsForNotification (폴링) > showAlarmNotification
 function showAlarmNotification(alarm) {
   if (!("Notification" in window)) return;
   if (Notification.permission !== "granted") return;
@@ -52,9 +58,14 @@ function showAlarmNotification(alarm) {
 
   shownAlarmMap.set(alarm.id, now);
 
-  new Notification("말벗 알람", {
+  const notification = new Notification("말벗 알람", {
     body: `설정한 알람 시간입니다. (${alarm.alarm_time})`,
   });
+
+  notification.onclick = () => {
+    window.focus();
+    window.location.href = "/";
+  };
 }
 
 // 알람 목록 화면 렌더링
@@ -213,7 +224,7 @@ async function subscribePush(registration) {
     const token = getAccessToken();
 
     if (!token) {
-      console.error("access_token이 없습니다.");
+      console.warn("access_token이 없습니다. 로그인 후 재시도 필요.");
       return;
     }
 
@@ -226,14 +237,16 @@ async function subscribePush(registration) {
       return;
     }
 
-    let subscription = await registration.pushManager.getSubscription();
-
-    if (!subscription) {
-      subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey),
-      });
+    // 기존 구독 해제 후 새로 등록 (VAPID 키 변경 시 403 방지)
+    const existing = await registration.pushManager.getSubscription();
+    if (existing) {
+      await existing.unsubscribe();
     }
+
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(publicKey),
+    });
 
     const response = await fetch("/api/v1/alarms/push/subscribe", {
       method: "POST",
@@ -257,7 +270,8 @@ async function subscribePush(registration) {
 }
 
 // 기존 due 알람 조회 방식
-// 현재는 웹 푸시가 핵심이지만, 보조 확인용으로 유지
+// 현재는 웹 푸시가 핵심이지만, 보조 확인용으로 유지 => 호출부 주석처리됨 (호출 X)
+// 폴링 방식, 호출안되게 상위에서 주석처리되어있음 : checkDueAlarmsForNotification (폴링) > showAlarmNotification
 async function checkDueAlarmsForNotification() {
   const token = getAccessToken();
   if (!token) return;
@@ -307,9 +321,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
   await loadAlarms();
-  await checkDueAlarmsForNotification();
+  // 폴링 방식 주석처리 - web push 동작만 사용하도록 변경
+  // await checkDueAlarmsForNotification();
 
-  setInterval(() => {
-    checkDueAlarmsForNotification();
-  }, 30000);
+  // setInterval(() => {
+  //   checkDueAlarmsForNotification();
+  // }, 30000);
 });

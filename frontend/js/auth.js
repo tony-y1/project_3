@@ -291,6 +291,7 @@ function initProtectedPage() {
 
     if (
         body.classList.contains("page-diary") ||
+        body.classList.contains("page-diary-detail") ||
         body.classList.contains("page-persona") ||
         body.classList.contains("page-profile")
     ) {

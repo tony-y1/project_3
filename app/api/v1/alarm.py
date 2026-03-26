@@ -4,14 +4,13 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
-
 from app.core.security import get_current_user
 from app.database import get_db
 from app.models.alarm import Alarm
+from app.models.push_subscription import PushSubscription
 from app.schemas.alarm import AlarmCreate, AlarmResponse
 from app.services.alarm_service import get_due_alarms
 from app.config import get_settings
-from app.services.push_store import PUSH_SUBSCRIPTIONS
 
 
 router = APIRouter()
@@ -34,13 +33,34 @@ async def get_push_public_key():
 @router.post("/push/subscribe")
 async def save_push_subscription(
     payload: PushSubscriptionCreate,
+    db: AsyncSession = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
     """
     현재 로그인한 사용자의 웹 푸시 구독 정보를 저장한다.
-    현재는 메모리 저장 방식이며, 추후 DB 저장으로 확장 가능하다.
+    기존 메모리 저장 방식에서 DB 저장으로 확장하였다.
+    이미 구독 정보가 있으면 덮어쓰고, 없으면 새로 생성한다.
     """
-    PUSH_SUBSCRIPTIONS[str(current_user.id)] = payload.model_dump()
+    user_id = str(current_user.id)
+    result = await db.execute(
+        select(PushSubscription).where(PushSubscription.user_id == user_id)
+    )
+    sub = result.scalar_one_or_none()
+
+    if sub:
+        sub.endpoint = payload.endpoint
+        sub.p256dh = payload.keys.get("p256dh", "")
+        sub.auth = payload.keys.get("auth", "")
+    else:
+        sub = PushSubscription(
+            user_id=user_id,
+            endpoint=payload.endpoint,
+            p256dh=payload.keys.get("p256dh", ""),
+            auth=payload.keys.get("auth", ""),
+        )
+        db.add(sub)
+
+    await db.commit()
     return {"message": "구독 저장 완료"}
 
 

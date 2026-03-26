@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pywebpush import webpush, WebPushException
 
 from app.config import get_settings
-from app.services.push_store import PUSH_SUBSCRIPTIONS
 from app.models.alarm import Alarm
+from app.models.push_subscription import PushSubscription
 
 
 async def get_due_alarms(db: AsyncSession, user_id: str | None = None):
@@ -74,10 +74,14 @@ async def trigger_alarm(db: AsyncSession, alarm: Alarm):
     """
     print(f"[ALARM TRIGGERED] id={alarm.id}, time={alarm.alarm_time}")
 
-    subscription = PUSH_SUBSCRIPTIONS.get(str(alarm.user_id))
+    # 기존 메모리 조회에서 DB 조회로 확장하였다.
+    result = await db.execute(
+        select(PushSubscription).where(PushSubscription.user_id == str(alarm.user_id))
+    )
+    sub = result.scalar_one_or_none()
     settings = get_settings()
 
-    if subscription:
+    if sub:
         try:
             payload = json.dumps({
                 "title": "말벗 알람",
@@ -85,7 +89,10 @@ async def trigger_alarm(db: AsyncSession, alarm: Alarm):
             })
 
             webpush(
-                subscription_info=subscription,
+                subscription_info={
+                    "endpoint": sub.endpoint,
+                    "keys": {"p256dh": sub.p256dh, "auth": sub.auth},
+                },
                 data=payload,
                 vapid_private_key=settings.VAPID_PRIVATE_KEY,
                 vapid_claims={"sub": settings.VAPID_CLAIMS_SUB},
