@@ -22,6 +22,27 @@ async def list_personas(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+     # 기본 페르소나 없으면 자동 생성
+    default_presets = [
+        {"name": "기본 말벗", "preset_type": "empathy", "is_active": True},
+        {"name": "조언형", "preset_type": "advice", "is_active": False},
+        {"name": "정보제공형", "preset_type": "info", "is_active": False},
+    ]
+    for preset in default_presets:
+        stmt_check = select(Persona).where(
+            Persona.user_id == current_user.id,
+            Persona.preset_type == preset["preset_type"],
+        )
+        result_check = await db.execute(stmt_check)
+        if not result_check.scalar_one_or_none():
+            db.add(Persona(
+                user_id=current_user.id,
+                name=preset["name"],
+                preset_type=preset["preset_type"],
+                is_active=preset.get("is_active", False),
+            ))
+    await db.commit()
+
     stmt = select(Persona).where(Persona.user_id == current_user.id)
     result = await db.execute(stmt)
     return result.scalars().all()
@@ -47,11 +68,22 @@ async def create_persona(
             detail="custom 타입은 custom_description이 필요합니다."
         )
 
+    # 기존 active 페르소나 모두 비활성화
+    stmt_deactivate = select(Persona).where(
+        Persona.user_id == current_user.id,
+        Persona.is_active == True,
+    )
+    result_deactivate = await db.execute(stmt_deactivate)
+    existing_personas = result_deactivate.scalars().all()
+    for p in existing_personas:
+        p.is_active = False
+
     persona = Persona(
         user_id=current_user.id,
         name=body.name,
         preset_type=body.preset_type,
         custom_description=body.custom_description,
+        is_active=True,
     )
     db.add(persona)
     await db.commit()
@@ -85,6 +117,16 @@ async def update_persona(
     if body.custom_description is not None:
         persona.custom_description = body.custom_description
     if body.is_active is not None:
+        if body.is_active:
+            # 다른 페르소나 모두 비활성화
+            stmt_deactivate = select(Persona).where(
+                Persona.user_id == current_user.id,
+                Persona.is_active == True,
+                Persona.id != persona_id,
+            )
+            result_deactivate = await db.execute(stmt_deactivate)
+            for p in result_deactivate.scalars().all():
+                p.is_active = False
         persona.is_active = body.is_active
 
     await db.commit()
