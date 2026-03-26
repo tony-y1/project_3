@@ -256,3 +256,27 @@ async def update_alarm(
     await db.refresh(alarm)
 
     return alarm
+
+
+@router.delete("/{alarm_id}", status_code=204)
+async def delete_alarm(
+    alarm_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """
+    알람 ID로 특정 알람을 삭제한다.
+    다른 사용자의 알람은 삭제할 수 없다.
+    """
+    result = await db.execute(
+        select(Alarm).where(
+            Alarm.id == alarm_id,
+            Alarm.user_id == str(current_user.id),
+        )
+    )
+    alarm = result.scalar_one_or_none()
+    if not alarm:
+        raise HTTPException(status_code=404, detail="알람을 찾을 수 없습니다.")
+
+    await db.delete(alarm)
+    await db.commit()
