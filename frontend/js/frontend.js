@@ -248,23 +248,62 @@ function renderDiaryProgress() {
     });
 }
 
-function fakeDiarySearch() {
+async function DiarySearch() {
     const input = document.getElementById("diary-search-input");
     const result = document.getElementById("diary-search-result");
+    const searchButton = document.getElementById("diary-search-button");
 
     if (!input || !result) return;
 
     const keyword = input.value.trim();
+
 
     if (!keyword) {
         alert("검색하고 싶은 내용을 입력해주세요.");
         return;
     }
 
-    result.innerHTML = `
-        "${escapeHtml(keyword)}"과 관련한 일기를 찾는 AI 검색 기능이 들어갈 자리예요.<br>
-        지금은 UI만 만든 상태이고, 나중에 키워드 일치 일기 내용이나 해당 날짜를 찾아주는 기능으로 연결하면 좋아요.
-    `;
+     // 검색 중 표시
+    if (searchButton) {
+        searchButton.disabled = true;
+        searchButton.textContent = "검색 중...";
+    }
+    result.innerHTML = "검색 중이에요...";
+
+    try {
+        const response = await apiRequest("/search/", {
+            method: "POST",
+            body: getJsonBody({ query: keyword }),
+        });
+
+        // AI 답변 표시
+        let html = `<p class="mb-3">${escapeHtml(response.answer)}</p>`;
+
+        // 관련 일기 목록 표시
+        if (response.results && response.results.length > 0) {
+            html += `<div class="space-y-2 mt-3">`;
+            response.results.forEach((diary) => {
+                html += `
+                    <div class="search-result-item cursor-pointer hover:opacity-80"
+                         onclick="window.location.href='diary_read.html?id=${encodeURIComponent(diary.id)}'">
+                        <div class="text-sm text-white/50">${escapeHtml(diary.diary_date)}</div>
+                        <div class="text-sm text-white/80 mt-1">${escapeHtml(diary.content.slice(0, 80))}${diary.content.length > 80 ? "..." : ""}</div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+        }
+
+        result.innerHTML = html;
+
+    } catch (error) {
+        result.innerHTML = `검색 중 오류가 발생했어요. 다시 시도해주세요.`;
+    } finally {
+        if (searchButton) {
+            searchButton.disabled = false;
+            searchButton.textContent = "검색하기";
+        }
+    }
 }
 
 /* =========================

@@ -217,7 +217,6 @@ function initDiaryDetailPage() {
     }
 
     populatePersonaSelect(personaSelect);
-
     populatePersonaSelect(personaSelect);
 
     const autoplayToggle = document.getElementById("ai-autoplay-toggle");
@@ -274,6 +273,15 @@ async function initDiaryReadPage() {
         contentEl.value = diary.content || "";
         await populatePersonaSelect(personaSelect, diary.persona_id || "");
         setDiaryReadOnly(fields, true);
+
+// --- 여기부터 수정한 코드 ---
+        if (personaSelect && !diary.persona_id) {
+            const defaultOption = personaSelect.querySelector('option[value=""]');
+            if (defaultOption) {
+                defaultOption.textContent = "기본 말벗";
+            }
+        }
+// --- 여기까지 수정한 코드 ---
 
         // 피드백 조회 + TTS 버튼 연결
         try {
