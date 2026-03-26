@@ -90,6 +90,7 @@ async def create_feedback(
         custom_description=custom_description,
     )
     return {"diary_id": str(diary_id), "feedback_text": feedback.feedback_text}
+
 # ── PUT /feedback/{diary_id}/regenerate ─ 피드백 재생성
 @router.put("/{diary_id}/regenerate")
 async def regenerate_feedback(
@@ -126,6 +127,7 @@ async def regenerate_feedback(
         custom_description=custom_description,
     )
     return {"diary_id": str(diary_id), "feedback_text": feedback.feedback_text}
+
 # ── GET /feedback/{diary_id} ─ 저장된 피드백 조회
 @router.get("/{diary_id}")
 async def get_feedback(

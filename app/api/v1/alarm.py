@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
@@ -151,6 +151,13 @@ async def test_due_alarms(
     }
 
 
+def _has_day_overlap(days_a: list[str], days_b_str: str | None) -> bool:
+    if not days_b_str:
+        return False
+    days_b = {d.strip() for d in days_b_str.split(",")}
+    return bool(set(days_a) & days_b)
+
+
 @router.post("/", response_model=AlarmResponse)
 async def create_alarm(
     alarm_data: AlarmCreate,
@@ -159,8 +166,19 @@ async def create_alarm(
 ):
     """
     현재 로그인한 사용자의 알람을 새로 생성한다.
+    동일한 시간 + 겹치는 요일의 알람이 이미 존재하면 409를 반환한다.
     repeat_days는 리스트 입력을 DB 저장용 문자열로 변환한다.
     """
+    same_time = await db.execute(
+        select(Alarm).where(
+            Alarm.user_id == str(current_user.id),
+            Alarm.alarm_time == alarm_data.alarm_time,
+        )
+    )
+    for existing in same_time.scalars().all():
+        if _has_day_overlap(alarm_data.repeat_days, existing.repeat_days):
+            raise HTTPException(status_code=409, detail="동일한 시간 및 요일의 알람이 이미 존재합니다.")
+
     repeat_days_str = ",".join(alarm_data.repeat_days) if alarm_data.repeat_days else None
 
     new_alarm = Alarm(
@@ -175,3 +193,46 @@ async def create_alarm(
     await db.refresh(new_alarm)
 
     return new_alarm
+
+
+@router.put("/{alarm_id}", response_model=AlarmResponse)
+async def update_alarm(
+    alarm_id: int,
+    alarm_data: AlarmCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """
+    알람 ID로 특정 알람을 수정한다.
+    다른 사용자의 알람은 수정할 수 없다.
+    수정하려는 시간이 다른 알람과 중복되면 409를 반환한다.
+    """
+    result = await db.execute(
+        select(Alarm).where(
+            Alarm.id == alarm_id,
+            Alarm.user_id == str(current_user.id),
+        )
+    )
+    alarm = result.scalar_one_or_none()
+    if not alarm:
+        raise HTTPException(status_code=404, detail="알람을 찾을 수 없습니다.")
+
+    same_time = await db.execute(
+        select(Alarm).where(
+            Alarm.user_id == str(current_user.id),
+            Alarm.alarm_time == alarm_data.alarm_time,
+            Alarm.id != alarm_id,
+        )
+    )
+    for existing in same_time.scalars().all():
+        if _has_day_overlap(alarm_data.repeat_days, existing.repeat_days):
+            raise HTTPException(status_code=409, detail="동일한 시간 및 요일의 알람이 이미 존재합니다.")
+
+    alarm.alarm_time = alarm_data.alarm_time
+    alarm.repeat_days = ",".join(alarm_data.repeat_days) if alarm_data.repeat_days else None
+    alarm.is_enabled = alarm_data.is_enabled
+
+    await db.commit()
+    await db.refresh(alarm)
+
+    return alarm

@@ -9,6 +9,9 @@ from app.services.diary_service import DiaryService
 from app.services.feedback_service import FeedbackService
 from app.core.security import get_current_user
 from app.models.user import User
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 diary_svc = DiaryService()
@@ -84,6 +87,7 @@ async def update_diary(
     diary = await diary_svc.get_diary(db, diary_id, current_user.id)
     if not diary:
         raise HTTPException(status_code=404, detail="일기를 찾을 수 없습니다.")
+    original_content = diary.content
     updated_diary = await diary_svc.update_diary(db, diary, body)
 
     # 일기 수정 후 AI 피드백 자동 갱신
@@ -95,13 +99,18 @@ async def update_diary(
             result = await db.execute(sa_select(Persona).where(Persona.id == updated_diary.persona_id))
             persona = result.scalar_one_or_none()
 
+        # logger.info(f"수정 전 content: {original_content}")
+        # logger.info(f"수정 후 content: {body.content}")
+        
         # 기존 일기 내용과 실제로 달라졌을 때만 피드백 재생성
-        if body.content is not None and body.content != diary.content:
+        if body.content is not None and body.content != original_content:
+            #logger.info(f"달라진거 피드백 재생성 시도")
             existing = await feedback_svc.get_feedback(db, diary_id)
             if existing:
                 await db.delete(existing)
                 await db.commit()
         else:
+            #logger.info(f"피드백 재생성 시도안함")
             return updated_diary  # 내용 변경 없으면 피드백 재생성 안 함
 
         # 새 피드백 생성

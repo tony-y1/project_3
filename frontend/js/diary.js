@@ -296,6 +296,7 @@ async function initDiaryReadPage() {
             }
 
             async function playTTS() {
+                //console.log("[TTS 호출 텍스트]", reviewEl.textContent);
                 ttsButton.disabled = true;
                 ttsButton.textContent = "생성 중...";
                 try {
@@ -306,7 +307,7 @@ async function initDiaryReadPage() {
                             "Content-Type": "application/json",
                             ...(token ? { Authorization: `Bearer ${token}` } : {}),
                         },
-                        body: JSON.stringify({ text: feedback.feedback_text }),
+                        body: JSON.stringify({ text: reviewEl.textContent }),
                     });
                     if (ttsResponse.ok) {
                         const audioBlob = await ttsResponse.blob();
@@ -410,6 +411,7 @@ async function initDiaryReadPage() {
                         );
                         const reviewEl = document.getElementById("diary-read-review");
                         if (reviewEl && updatedFeedback.feedback_text) {
+                            //console.log("[수정 후 새 피드백]", updatedFeedback.feedback_text);
                             reviewEl.textContent = updatedFeedback.feedback_text;
                         }
                     } catch (_) {
