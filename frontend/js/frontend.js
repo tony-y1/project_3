@@ -1,6 +1,126 @@
 /* =========================
    Common
 ========================= */
+
+function initCustomSelect(nativeSelect) {
+    if (!nativeSelect || nativeSelect._customSelectInit) return;
+    nativeSelect._customSelectInit = true;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "custom-select-wrapper";
+    nativeSelect.parentNode.insertBefore(wrapper, nativeSelect);
+    wrapper.appendChild(nativeSelect);
+
+    const trigger = document.createElement("div");
+    trigger.className = nativeSelect.className + " custom-select-trigger";
+    trigger.setAttribute("role", "button");
+    trigger.setAttribute("tabindex", "0");
+
+    const triggerText = document.createElement("span");
+    triggerText.className = "custom-select-text";
+
+    const triggerArrow = document.createElement("span");
+    triggerArrow.className = "custom-select-arrow";
+    triggerArrow.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8"><path d="M1 1l5 5 5-5" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`;
+
+    trigger.appendChild(triggerText);
+    trigger.appendChild(triggerArrow);
+    wrapper.insertBefore(trigger, nativeSelect);
+
+    nativeSelect.style.display = "none";
+
+    const dropdown = document.createElement("div");
+    dropdown.className = "custom-select-dropdown";
+    wrapper.appendChild(dropdown);
+
+    function getDisplayText() {
+        const idx = nativeSelect.selectedIndex;
+        if (idx < 0) return "선택하기";
+        const opt = nativeSelect.options[idx];
+        if (opt.disabled && opt.hidden) return "선택하기";
+        return opt.textContent;
+    }
+
+    function renderOptions() {
+        dropdown.innerHTML = "";
+        Array.from(nativeSelect.options).forEach((opt) => {
+            if (opt.hidden) return;
+            const div = document.createElement("div");
+            div.className = "custom-select-option";
+            if (opt.value === nativeSelect.value) div.classList.add("is-selected");
+            div.textContent = opt.textContent;
+            div.dataset.value = opt.value;
+            div.addEventListener("click", (e) => {
+                e.stopPropagation();
+                nativeSelect.value = opt.value;
+                nativeSelect.dispatchEvent(new Event("change", { bubbles: true }));
+                updateTrigger();
+                closeDropdown();
+            });
+            dropdown.appendChild(div);
+        });
+    }
+
+    function updateTrigger() {
+        triggerText.textContent = getDisplayText();
+        dropdown.querySelectorAll(".custom-select-option").forEach((div) => {
+            div.classList.toggle("is-selected", div.dataset.value === nativeSelect.value);
+        });
+    }
+
+    function openDropdown() {
+        if (nativeSelect.disabled) return;
+        renderOptions();
+        wrapper.classList.add("is-open");
+    }
+
+    function closeDropdown() {
+        wrapper.classList.remove("is-open");
+    }
+
+    trigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        wrapper.classList.contains("is-open") ? closeDropdown() : openDropdown();
+    });
+
+    trigger.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            wrapper.classList.contains("is-open") ? closeDropdown() : openDropdown();
+        } else if (e.key === "Escape") {
+            closeDropdown();
+        }
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!wrapper.contains(e.target)) closeDropdown();
+    });
+
+    const childObserver = new MutationObserver(() => {
+        updateTrigger();
+        if (wrapper.classList.contains("is-open")) renderOptions();
+    });
+    childObserver.observe(nativeSelect, { childList: true, subtree: true, characterData: true });
+
+    const attrObserver = new MutationObserver(() => {
+        wrapper.classList.toggle("is-disabled", nativeSelect.disabled);
+    });
+    attrObserver.observe(nativeSelect, { attributes: true, attributeFilter: ["disabled"] });
+
+    const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value");
+    Object.defineProperty(nativeSelect, "value", {
+        get: () => valueDescriptor.get.call(nativeSelect),
+        set: (v) => {
+            valueDescriptor.set.call(nativeSelect, v);
+            updateTrigger();
+        },
+        configurable: true,
+    });
+
+    wrapper.classList.toggle("is-disabled", nativeSelect.disabled);
+    updateTrigger();
+}
+
 function escapeHtml(text) {
     const div = document.createElement("div");
     div.textContent = text;
@@ -479,6 +599,9 @@ function initProfileCalendarControls() {
     if (!yearSelect || !monthSelect) {
         return;
     }
+
+    initCustomSelect(yearSelect);
+    initCustomSelect(monthSelect);
 
     if (!yearSelect.options.length) {
         for (let year = 2020; year <= 2035; year++) {

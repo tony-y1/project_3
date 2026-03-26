@@ -218,6 +218,7 @@ function initDiaryDetailPage() {
         dateInput.value = new Date().toISOString().slice(0, 10);
     }
 
+    if (typeof initCustomSelect === "function") initCustomSelect(personaSelect);
     populatePersonaSelect(personaSelect, "", true);
 
     const autoplayToggle = document.getElementById("ai-autoplay-toggle");
@@ -254,6 +255,8 @@ async function initDiaryReadPage() {
     if (!dateEl || !emotionEl || !weatherEl || !titleEl || !contentEl) {
         return;
     }
+
+    if (typeof initCustomSelect === "function") initCustomSelect(personaSelect);
 
     const fields = [dateEl, emotionEl, weatherEl, titleEl, contentEl];
     const params = new URLSearchParams(window.location.search);
