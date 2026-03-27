@@ -60,8 +60,27 @@ async def create_diary(
     except Exception:
         pass  # 피드백 실패해도 일기 생성은 성공으로 처리
     
+    # 해시태그 자동 생성
+    try:
+        from app.services.gpt_service import gpt_service
+        hashtags = await gpt_service.generate_hashtags(diary.content)
+        if hashtags:
+            await diary_svc.add_hashtags(db, diary.id, current_user.id, hashtags)
+    except Exception:
+        pass  # 해시태그 생성 실패해도 일기 생성은 성공으로 처리
+    
     return diary
 
+    # 해시태그 자동 생성
+    try:
+        from app.services.gpt_service import gpt_service
+        from app.services.diary_service import DiaryService
+        hashtags = await gpt_service.generate_hashtags(diary.content)
+        if hashtags:
+            await diary_svc.add_hashtags(db, diary.id, current_user.id, hashtags)
+    
+    except Exception:
+        pass  # 해시태그 생성 실패해도 일기 생성은 성공으로 처리
 
 # ── GET /diaries/{diary_id} ─ 단건 조회 ─────────
 @router.get("/{diary_id}", response_model=DiaryResponse)
@@ -75,6 +94,63 @@ async def get_diary(
         raise HTTPException(status_code=404, detail="일기를 찾을 수 없습니다.")
     return diary
 
+# ── GET /diaries/{diary_id}/hashtags ─ 해시태그 조회
+@router.get("/{diary_id}/hashtags")
+async def get_diary_hashtags(
+    diary_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    diary = await diary_svc.get_diary(db, diary_id, current_user.id)
+    if not diary:
+        raise HTTPException(status_code=404, detail="일기를 찾을 수 없습니다.")
+
+    from app.models.hashtag import Hashtag, DiaryHashtag
+    from sqlalchemy import select as sa_select
+    stmt = (
+        sa_select(Hashtag)
+        .join(DiaryHashtag, Hashtag.id == DiaryHashtag.hashtag_id)
+        .where(DiaryHashtag.diary_id == diary_id)
+    )
+    result = await db.execute(stmt)
+    hashtags = result.scalars().all()
+    return {"hashtags": [tag.name for tag in hashtags]}
+
+# ── DELETE /diaries/{diary_id}/hashtags/{tag_name} ─ 해시태그 삭제
+@router.delete("/{diary_id}/hashtags/{tag_name}", status_code=204)
+async def delete_diary_hashtag(
+    diary_id: uuid.UUID,
+    tag_name: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    diary = await diary_svc.get_diary(db, diary_id, current_user.id)
+    if not diary:
+        raise HTTPException(status_code=404, detail="일기를 찾을 수 없습니다.")
+
+    from app.models.hashtag import Hashtag, DiaryHashtag
+    from sqlalchemy import select as sa_select
+
+    # 해시태그 조회
+    stmt = (
+        sa_select(Hashtag)
+        .where(Hashtag.user_id == current_user.id, Hashtag.name == tag_name)
+    )
+    result = await db.execute(stmt)
+    hashtag = result.scalar_one_or_none()
+    if not hashtag:
+        raise HTTPException(status_code=404, detail="해시태그를 찾을 수 없습니다.")
+
+    # 일기-태그 연결 삭제
+    stmt_link = sa_select(DiaryHashtag).where(
+        DiaryHashtag.diary_id == diary_id,
+        DiaryHashtag.hashtag_id == hashtag.id,
+    )
+    result_link = await db.execute(stmt_link)
+    link = result_link.scalar_one_or_none()
+    if link:
+        await db.delete(link)
+        await db.commit()
 
 # ── PATCH /diaries/{diary_id} ─ 수정 ────────────
 @router.patch("/{diary_id}", response_model=DiaryResponse)
@@ -113,6 +189,7 @@ async def update_diary(
                 await db.delete(existing)
                 await db.commit()
         else:
+
 #            logger.info(f"피드백 재생성 시도안함")
             return updated_diary  # 변경 없으면 피드백 재생성 안 함
 
@@ -129,6 +206,27 @@ async def update_diary(
         )
     except Exception:
         pass  # 피드백 갱신 실패해도 일기 수정은 성공으로 처리
+
+      # 내용 변경 시 해시태그 재생성
+    try:
+        if body.content is not None and body.content != original_content:
+            from app.services.gpt_service import gpt_service
+            from app.models.hashtag import DiaryHashtag
+            from sqlalchemy import select as sa_select2
+
+            # 기존 해시태그 연결 삭제
+            stmt_del = sa_select2(DiaryHashtag).where(DiaryHashtag.diary_id == diary_id)
+            result_del = await db.execute(stmt_del)
+            for dh in result_del.scalars().all():
+                await db.delete(dh)
+            await db.commit()
+
+            # 새 해시태그 생성
+            hashtags = await gpt_service.generate_hashtags(updated_diary.content)
+            if hashtags:
+                await diary_svc.add_hashtags(db, diary_id, current_user.id, hashtags)
+    except Exception:
+        pass  # 해시태그 재생성 실패해도 수정은 성공으로 처리
 
     return updated_diary
 

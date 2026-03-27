@@ -122,3 +122,40 @@ class DiaryService:
     ) -> None:
         await db.delete(diary)
         await db.commit()
+
+
+    # ── 해시태그 추가 ─────────────────────────────
+    async def add_hashtags(
+        self,
+        db: AsyncSession,
+        diary_id: uuid.UUID,
+        user_id: uuid.UUID,
+        hashtags: list[str],
+    ) -> None:
+        for tag in hashtags:
+            tag_name = tag.strip()
+            if not tag_name:
+                continue
+            # 기존 태그 조회
+            existing = await db.execute(
+                select(Hashtag).where(
+                    Hashtag.user_id == user_id,
+                    Hashtag.name == tag_name,
+                )
+            )
+            hashtag = existing.scalar_one_or_none()
+            # 없으면 새로 생성
+            if not hashtag:
+                hashtag = Hashtag(user_id=user_id, name=tag_name)
+                db.add(hashtag)
+                await db.flush()
+            # 중복 연결 확인
+            existing_link = await db.execute(
+                select(DiaryHashtag).where(
+                    DiaryHashtag.diary_id == diary_id,
+                    DiaryHashtag.hashtag_id == hashtag.id,
+                )
+            )
+            if not existing_link.scalar_one_or_none():
+                db.add(DiaryHashtag(diary_id=diary_id, hashtag_id=hashtag.id))
+        await db.commit()

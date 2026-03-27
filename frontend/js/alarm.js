@@ -213,6 +213,7 @@ function renderAlarmList(alarms) {
       </div>
       <div class="profile-alarm-item-actions">
         <button type="button" data-alarm-id="${alarm.id}" class="edit-alarm-btn profile-calendar-nav">수정</button>
+        <button type="button" data-alarm-id="${alarm.id}" class="delete-alarm-btn profile-calendar-nav is-danger">삭제</button>
       </div>
     `;
 
@@ -225,6 +226,14 @@ function renderAlarmList(alarms) {
       const alarmId = parseInt(btn.dataset.alarmId);
       const alarm = alarms.find((a) => a.id === alarmId);
       if (alarm) fillFormForEdit(alarm);
+    });
+  });
+
+  // 삭제 버튼 이벤트 등록
+  alarmListEl.querySelectorAll(".delete-alarm-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const alarmId = parseInt(btn.dataset.alarmId);
+      deleteAlarm(alarmId);
     });
   });
 }
@@ -287,6 +296,37 @@ async function loadAlarms() {
   } catch (error) {
     console.error("알람 목록 조회 실패", error);
     alert("알람 목록을 불러오지 못했습니다.");
+  }
+}
+
+// 알람 삭제
+async function deleteAlarm(alarmId) {
+  if (!confirm("알람을 삭제할까요?")) return;
+
+  const token = getAccessToken();
+  if (!token) {
+    alert("로그인이 필요합니다.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/v1/alarms/${alarmId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`알람 삭제 실패: ${response.status} / ${errorText}`);
+    }
+
+    await loadAlarms();
+  } catch (error) {
+    console.error("알람 삭제 실패:", error);
+    alert("알람 삭제에 실패했습니다.");
   }
 }
 

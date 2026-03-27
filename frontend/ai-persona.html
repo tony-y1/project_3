@@ -90,8 +90,8 @@
                 <section class="persona-glass rounded-[32px] p-7 md:p-10 shadow-2xl">
                     <div class="flex items-center justify-between mb-8">
                         <div>
-                            <p class="font-script text-xl text-white/70 mb-1">Create persona</p>
-                            <h2 class="text-2xl md:text-3xl font-semibold text-white">새 페르소나 만들기</h2>
+                            <p id="persona-form-subtitle" class="font-script text-xl text-white/70 mb-1">Create persona</p>
+                            <h2 id="persona-form-title" class="text-2xl md:text-3xl font-semibold text-white">새 페르소나 만들기</h2>
                         </div>
                         <div class="hidden md:flex items-center gap-2">
                             <span class="w-3 h-3 rounded-full bg-white opacity-90"></span>
@@ -101,6 +101,7 @@
                     </div>
 
                     <form id="persona-form" class="space-y-6">
+                        <input type="hidden" id="persona-edit-id" value="">
                         <div>
                             <label class="persona-label">페르소나 이름</label>
                             <input
@@ -130,13 +131,23 @@
                             ></textarea>
                         </div>
 
-                        <div class="pt-2">
+                        <div class="pt-2 flex flex-wrap gap-3">
                             <button
+                                id="persona-save-btn"
                                 type="button"
                                 onclick="addPersona()"
-                                class="w-full md:w-auto px-8 py-4 rounded-full text-white tracking-[0.18em] uppercase text-sm font-medium transition-all hover:opacity-90 hover:-translate-y-[1px] bg-white/20 border border-white/30"
+                                class="px-8 py-4 rounded-full text-white tracking-[0.18em] uppercase text-sm font-medium transition-all hover:opacity-90 hover:-translate-y-[1px] bg-white/20 border border-white/30"
                             >
                                 Save Persona
+                            </button>
+                            <button
+                                id="persona-cancel-btn"
+                                type="button"
+                                onclick="cancelPersonaEdit()"
+                                style="display:none"
+                                class="px-8 py-4 rounded-full text-white/60 tracking-[0.18em] uppercase text-sm font-medium transition-all hover:text-white hover:-translate-y-[1px] border border-white/20"
+                            >
+                                Cancel
                             </button>
                         </div>
                     </form>

@@ -61,6 +61,67 @@ async function fetchDiary(diaryId) {
     return apiRequest(`/diaries/${encodeURIComponent(diaryId)}`, { method: "GET" });
 }
 
+async function fetchDiaryHashtags(diaryId) {
+    return apiRequest(`/diaries/${encodeURIComponent(diaryId)}/hashtags`, { method: "GET" });
+}
+
+function renderHashtags(hashtags, showEmpty = false) {
+    const wrapper = document.getElementById("diary-hashtag-wrapper");
+    if (!wrapper) return;
+    wrapper.innerHTML = "";
+    if (!hashtags || !hashtags.length) {
+        if (showEmpty) {
+            const msg = document.createElement("p");
+            msg.className = "text-sm text-white/40 italic w-full";
+            msg.textContent = "해시태그를 생성할 수 없어요.";
+            wrapper.appendChild(msg);
+        }
+        return;
+    }
+     // # 포함되거나 너무 긴 태그 필터링
+    hashtags = hashtags.filter(tag => !tag.includes("#") && tag.length <= 10);
+
+    if (!hashtags.length) {
+        const msg = document.createElement("p");
+        msg.className = "text-sm text-white/40 italic w-full";
+        msg.textContent = "해시태그를 생성할 수 없는 내용이에요.";
+        wrapper.appendChild(msg);
+        return;
+    }
+
+    hashtags.forEach((tag) => {
+        const span = document.createElement("span");
+        span.className = "group relative px-3 py-1 rounded-full text-sm text-white/80 border border-white/20 bg-white/10 cursor-pointer hover:border-white/50 transition-all";
+        span.innerHTML = `
+            <span class="tag-text">#${escapeHtml(tag)}</span>
+            <button type="button"
+                class="tag-delete hidden group-hover:inline-block ml-1 text-white/50 hover:text-white text-xs font-bold"
+                onclick="removeHashtag(this, '${escapeHtml(tag)}')">✕</button>
+        `;
+        
+        wrapper.appendChild(span);
+    });
+}
+
+async function removeHashtag(button, tagName) {
+    const span = button.closest("span");
+    if (!span) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const diaryId = params.get("id");
+    if (!diaryId) return;
+
+    try {
+        await apiRequest(
+            `/diaries/${encodeURIComponent(diaryId)}/hashtags/${encodeURIComponent(tagName)}`,
+            { method: "DELETE" }
+        );
+        span.remove();
+    } catch (_) {
+        window.alert("해시태그 삭제에 실패했어요.");
+    }
+}
+
 async function createDiary(payload) {
     return apiRequest("/diaries/", {
         method: "POST",
@@ -275,6 +336,15 @@ async function initDiaryReadPage() {
         weatherEl.value = diary.weather || "";
         titleEl.value = diary.title || "";
         contentEl.value = diary.content || "";
+
+        // 해시태그 로드
+        try {
+            const hashtagData = await fetchDiaryHashtags(diaryId);
+            renderHashtags(hashtagData.hashtags || [], true);
+        } catch (_) {
+            renderHashtags([], true);
+        }
+        
         await populatePersonaSelect(personaSelect, diary.persona_id || "");
         setDiaryReadOnly(fields, true);
 
@@ -433,6 +503,16 @@ async function initDiaryReadPage() {
                     } catch (_) {
                         // 피드백 갱신 실패해도 수정은 성공으로 처리
                     }
+
+                      // 해시태그 재생성 후 다시 불러오기
+                    try {
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        const hashtagData = await fetchDiaryHashtags(diaryId);
+                        renderHashtags(hashtagData.hashtags || [], true);
+                    } catch (_) {
+                        // 해시태그 갱신 실패해도 수정은 성공으로 처리
+                    }
+
                 } catch (error) {
                     window.alert(error.message || "일기 수정에 실패했어요.");
                     editButton.textContent = "저장";

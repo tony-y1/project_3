@@ -84,5 +84,39 @@ class GPTService:
 
         logger.info(f"GPT 스트리밍 완료: 총 {time.time() - t_start:.2f}s")
 
+    async def generate_hashtags(self, diary_content: str) -> list[str]:
+        """일기 내용에서 해시태그 자동 생성"""
+        try:
+            response = await client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "일기 내용을 읽고 핵심 키워드를 해시태그로 추출해주세요.\n"
+                            "규칙:\n"
+                            "1. 3~5개의 해시태그 추출\n"
+                            "2. 한국어로 작성\n"
+                            "3. # 없이 단어만 반환\n"
+                            "4. 쉼표로 구분\n"
+                            "예시) 친구, 카페, 행복, 일상"
+                        ),
+                    },
+                    {"role": "user", "content": diary_content},
+                ],
+                max_tokens=100,
+            )
+            result = response.choices[0].message.content.strip()
+            hashtags = [tag.strip() for tag in result.split(",") if tag.strip()]
+            # 오류 문구나 비정상 태그 필터링
+            valid_hashtags = [
+                tag for tag in hashtags
+                if tag and len(tag) <= 10
+                and not any(kw in tag for kw in ["죄송", "죄송합니다", "제공", "이해", "어렵", "내용"])
+            ]
+            return valid_hashtags[:5]
+        except Exception as e:
+            logger.error(f"해시태그 생성 오류: {e}")
+            return []
 
 gpt_service = GPTService()
