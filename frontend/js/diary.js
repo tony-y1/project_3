@@ -358,8 +358,10 @@ async function initDiaryReadPage() {
     try {
         const diary = await fetchDiary(diaryId);
         dateEl.value = diary.diary_date || "";
-        emotionEl.value = diary.emotion || "";
-        weatherEl.value = diary.weather || "";
+        const emotionOpt = EMOTION_OPTIONS.find(o => o.label === diary.emotion);
+        emotionEl.value = emotionOpt ? `${emotionOpt.emoji} ${emotionOpt.label}` : (diary.emotion || "");
+        const weatherOpt = WEATHER_OPTIONS.find(o => o.label === diary.weather);
+        weatherEl.value = weatherOpt ? `${weatherOpt.emoji} ${weatherOpt.label}` : (diary.weather || "");
         titleEl.value = diary.title || "";
         contentEl.value = diary.content || "";
         await populatePersonaSelect(personaSelect, diary.persona_id || "");
