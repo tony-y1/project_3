@@ -1,5 +1,59 @@
 // 담당: 정원님 - 알람 및 Web Push 관련 기능
 
+function populateAlarmTimeSelects() {
+  const hourSelect = document.getElementById("alarm-hour");
+  const minuteSelect = document.getElementById("alarm-minute");
+  if (!hourSelect || !minuteSelect) return;
+
+  for (let h = 1; h <= 12; h++) {
+    const opt = document.createElement("option");
+    opt.value = String(h);
+    opt.textContent = h + "시";
+    hourSelect.appendChild(opt);
+  }
+
+  for (let m = 0; m <= 59; m++) {
+    const opt = document.createElement("option");
+    opt.value = String(m).padStart(2, "0");
+    opt.textContent = String(m).padStart(2, "0") + "분";
+    minuteSelect.appendChild(opt);
+  }
+
+  initCustomSelect(document.getElementById("alarm-ampm"));
+  initCustomSelect(hourSelect);
+  initCustomSelect(minuteSelect);
+}
+
+function getAlarmTimeValue() {
+  const ampm = document.getElementById("alarm-ampm")?.value;
+  const hourRaw = parseInt(document.getElementById("alarm-hour")?.value || "0");
+  const minute = document.getElementById("alarm-minute")?.value || "00";
+
+  if (!ampm || !hourRaw) return null;
+
+  let hour24 = hourRaw;
+  if (ampm === "AM" && hourRaw === 12) hour24 = 0;
+  else if (ampm === "PM" && hourRaw !== 12) hour24 = hourRaw + 12;
+
+  return `${String(hour24).padStart(2, "0")}:${minute}:00`;
+}
+
+function setAlarmTimeSelects(timeStr) {
+  const [hhStr, mmStr] = timeStr.split(":");
+  const hh = parseInt(hhStr);
+
+  const ampm = hh < 12 ? "AM" : "PM";
+  const hour12 = hh % 12 === 0 ? 12 : hh % 12;
+
+  const ampmSelect = document.getElementById("alarm-ampm");
+  const hourSelect = document.getElementById("alarm-hour");
+  const minuteSelect = document.getElementById("alarm-minute");
+
+  if (ampmSelect) ampmSelect.value = ampm;
+  if (hourSelect) hourSelect.value = String(hour12);
+  if (minuteSelect) minuteSelect.value = mmStr.slice(0, 2);
+}
+
 const DAY_KOR = {
   MON: "월요일", TUE: "화요일", WED: "수요일",
   THU: "목요일", FRI: "금요일", SAT: "토요일", SUN: "일요일",
@@ -117,8 +171,10 @@ function showAlarmFormView(mode) {
   if (title) title.textContent = mode === "edit" ? "알람 수정" : "알람 추가";
 
   if (mode === "create") {
-    const timeInput = document.getElementById("alarm-time");
-    if (timeInput) timeInput.value = "";
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mm = String(now.getMinutes()).padStart(2, "0");
+    setAlarmTimeSelects(`${hh}:${mm}`);
 
     ALL_DAYS.forEach((d) => {
       document.getElementById(`day-${d.toLowerCase()}`)?.classList.remove("is-active");
@@ -186,11 +242,7 @@ function renderAlarmList(alarms) {
 function fillFormForEdit(alarm) {
   editingAlarmId = alarm.id;
 
-  const alarmTimeInput = document.getElementById("alarm-time");
-  // 시간 설정 (HH:MM:SS → HH:MM)
-  if (alarmTimeInput) {
-    alarmTimeInput.value = alarm.alarm_time.slice(0, 5);
-  }
+  setAlarmTimeSelects(alarm.alarm_time.slice(0, 5));
 
   // 요일 버튼 상태 설정
   const dayIdMap = { MON: "day-mon", TUE: "day-tue", WED: "day-wed", THU: "day-thu", FRI: "day-fri", SAT: "day-sat", SUN: "day-sun" };
@@ -281,13 +333,13 @@ async function deleteAlarm(alarmId) {
 // 알람 저장 (신규: POST / 수정: PUT)
 async function saveAlarm() {
   const token = getAccessToken();
-  const alarmTimeInput = document.getElementById("alarm-time");
   if (!token) {
     alert("로그인이 필요합니다.");
     return;
   }
 
-  if (!alarmTimeInput || !alarmTimeInput.value) {
+  const alarmTime = getAlarmTimeValue();
+  if (!alarmTime) {
     alert("알람 시간을 선택해주세요.");
     return;
   }
@@ -300,7 +352,7 @@ async function saveAlarm() {
   }
 
   const body = {
-    alarm_time: `${alarmTimeInput.value}:00`,
+    alarm_time: alarmTime,
     repeat_days: repeatDays,
     is_enabled: true,
   };
@@ -451,6 +503,7 @@ async function checkDueAlarmsForNotification() {
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
+  populateAlarmTimeSelects();
   setupDayAllToggle();
 
   const registration = await registerServiceWorker();

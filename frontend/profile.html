@@ -73,9 +73,10 @@
             color: #ffffff;
         }
 
-        /* time input 색상 */
-        .profile-alarm-time::-webkit-calendar-picker-indicator {
-            filter: invert(1) opacity(0.5);
+        .alarm-time-selects {
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
     </style>
 </head>
@@ -204,7 +205,14 @@
 
                                     <div class="flex flex-col items-center gap-3 mb-10">
                                         <p class="profile-calendar-caption">알람 시간</p>
-                                        <input type="time" id="alarm-time" class="profile-alarm-time alarm-time-large" />
+                                        <div class="alarm-time-selects">
+                                            <select id="alarm-ampm" class="profile-calendar-select">
+                                                <option value="AM">오전</option>
+                                                <option value="PM">오후</option>
+                                            </select>
+                                            <select id="alarm-hour" class="profile-calendar-select"></select>
+                                            <select id="alarm-minute" class="profile-calendar-select"></select>
+                                        </div>
                                     </div>
 
                                     <div class="flex flex-col items-center gap-4 mb-10">
