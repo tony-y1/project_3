@@ -23,7 +23,7 @@ function createDiaryCard(diary) {
 
     book.querySelector(".diary-book-delete").addEventListener("click", async (e) => {
         e.stopPropagation();
-        if (!window.confirm("이 일기를 삭제할까요?")) return;
+        if (!await showAppConfirm("이 일기를 삭제할까요?", "일기 삭제")) return;
 
         try {
             await deleteDiary(diary.id);
@@ -42,7 +42,7 @@ function createDiaryCard(diary) {
             updateDiaryShelfPosition();
             renderDiaryProgress();
         } catch (error) {
-            window.alert(error.message || "일기 삭제에 실패했어요.");
+            showAppToast(error.message || "일기 삭제에 실패했어요.", "error", "삭제 실패");
         }
     });
 
@@ -118,7 +118,7 @@ async function removeHashtag(button, tagName) {
         );
         span.remove();
     } catch (_) {
-        window.alert("해시태그 삭제에 실패했어요.");
+        showAppToast("해시태그 삭제에 실패했어요.", "error", "삭제 실패");
     }
 }
 
@@ -228,7 +228,7 @@ async function handleDiaryCreateSubmit(event) {
     const content = contentInput.value.trim();
 
     if (!diaryDate || !content) {
-        window.alert("날짜와 일기 내용을 입력해주세요.");
+        showAppToast("날짜와 일기 내용을 입력해주세요.", "info", "입력 확인");
         return;
     }
 
@@ -250,7 +250,7 @@ async function handleDiaryCreateSubmit(event) {
         window.location.href = `diary_read.html?id=${encodeURIComponent(diary.id)}&autoplay=${autoplay}`;
 
     } catch (error) {
-        window.alert(error.message || "일기 저장에 실패했어요.");
+        showAppToast(error.message || "일기 저장에 실패했어요.", "error", "저장 실패");
     } finally {
         saveButton.disabled = false;
         saveButton.textContent = "저장하기";
@@ -535,7 +535,7 @@ async function initDiaryReadPage() {
                         reviewEl.textContent = newFeedback.feedback_text;
                     }
                 } catch (_) {
-                    window.alert("새로운 반응을 가져오지 못했어요. 다시 시도해주세요.");
+                    showAppToast("새로운 반응을 가져오지 못했어요. 다시 시도해주세요.", "error", "오류");
                 } finally {
                     rerollSummaryButton.disabled = false;
                     rerollSummaryButton.textContent = "반응이 마음에 안드시면 여기를 눌러주세요!";
@@ -559,7 +559,7 @@ async function initDiaryReadPage() {
                 }
 
                 if (!dateEl.value.trim() || !contentEl.value.trim()) {
-                    window.alert("날짜와 일기 내용을 입력해주세요.");
+                    showAppToast("날짜와 일기 내용을 입력해주세요.", "info", "입력 확인");
                     return;
                 }
 
@@ -633,7 +633,7 @@ async function initDiaryReadPage() {
                     }
 
                 } catch (error) {
-                    window.alert(error.message || "일기 수정에 실패했어요.");
+                    showAppToast(error.message || "일기 수정에 실패했어요.", "error", "수정 실패");
                     editButton.textContent = "저장";
                 } finally {
                     editButton.disabled = false;
@@ -643,17 +643,14 @@ async function initDiaryReadPage() {
 
         if (deleteButton) {
             deleteButton.addEventListener("click", async () => {
-                const isConfirmed = window.confirm("이 일기를 삭제할까요?");
-                if (!isConfirmed) {
-                    return;
-                }
+                if (!await showAppConfirm("이 일기를 삭제할까요?", "일기 삭제")) return;
 
                 try {
                     deleteButton.disabled = true;
                     await deleteDiary(diaryId);
                     window.location.href = "my-diary.html";
                 } catch (error) {
-                    window.alert(error.message || "일기 삭제에 실패했어요.");
+                    showAppToast(error.message || "일기 삭제에 실패했어요.", "error", "삭제 실패");
                     deleteButton.disabled = false;
                 }
             });

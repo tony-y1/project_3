@@ -118,7 +118,7 @@ const stt = (() => {
     function startWebSpeech() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
-            alert("이 브라우저는 Web Speech API를 지원하지 않아요. Chrome을 사용해주세요.");
+            showAppToast("이 브라우저는 Web Speech API를 지원하지 않아요. Chrome을 사용해주세요.", "error", "지원 안 함");
             return;
         }
 

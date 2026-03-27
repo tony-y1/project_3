@@ -1981,3 +1981,128 @@ html, body {
     line-height: 1.9;
     font-size: 14px;
 }
+
+/* ── Toast ───────────────────────────────────────────── */
+.alarm-toast-container {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 1200;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+}
+
+.alarm-toast {
+    min-width: 260px;
+    max-width: min(360px, calc(100vw - 32px));
+    padding: 16px 18px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(17, 24, 39, 0.88);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.28);
+    color: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.alarm-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.alarm-toast.is-success { background: rgba(19, 78, 74, 0.92); }
+.alarm-toast.is-error   { background: rgba(127, 29, 29, 0.92); }
+.alarm-toast.is-info    { background: rgba(30, 41, 59, 0.92); }
+
+.alarm-toast-title {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.58);
+    margin-bottom: 8px;
+}
+
+.alarm-toast-message {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* ── Confirm Modal ───────────────────────────────────── */
+.alarm-feedback-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1150;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.alarm-feedback-modal.hidden {
+    display: none;
+}
+
+.alarm-feedback-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(10px);
+}
+
+.alarm-feedback-card {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 420px);
+    padding: 28px;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 28px 60px rgba(0, 0, 0, 0.32);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+}
+
+.alarm-feedback-title {
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 700;
+    margin: 8px 0 12px;
+}
+
+.alarm-feedback-message {
+    color: rgba(255, 255, 255, 0.76);
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+.alarm-feedback-actions {
+    margin-top: 24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+@media (max-width: 768px) {
+    .alarm-toast-container {
+        top: auto;
+        right: 16px;
+        left: 16px;
+        bottom: 16px;
+    }
+
+    .alarm-toast {
+        min-width: 0;
+        max-width: none;
+    }
+
+    .alarm-feedback-card {
+        padding: 24px 20px;
+        border-radius: 24px;
+    }
+}
