@@ -75,6 +75,27 @@ async def get_diary(
         raise HTTPException(status_code=404, detail="일기를 찾을 수 없습니다.")
     return diary
 
+# ── GET /diaries/{diary_id}/hashtags ─ 해시태그 조회
+@router.get("/{diary_id}/hashtags")
+async def get_diary_hashtags(
+    diary_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    diary = await diary_svc.get_diary(db, diary_id, current_user.id)
+    if not diary:
+        raise HTTPException(status_code=404, detail="일기를 찾을 수 없습니다.")
+
+    from app.models.hashtag import Hashtag, DiaryHashtag
+    from sqlalchemy import select as sa_select
+    stmt = (
+        sa_select(Hashtag)
+        .join(DiaryHashtag, Hashtag.id == DiaryHashtag.hashtag_id)
+        .where(DiaryHashtag.diary_id == diary_id)
+    )
+    result = await db.execute(stmt)
+    hashtags = result.scalars().all()
+    return {"hashtags": [tag.name for tag in hashtags]}
 
 # ── PATCH /diaries/{diary_id} ─ 수정 ────────────
 @router.patch("/{diary_id}", response_model=DiaryResponse)
