@@ -196,6 +196,18 @@ html, body {
     cursor: pointer;
 }
 
+.profile-calendar-nav.is-danger {
+    border-color: rgba(255, 90, 90, 0.35);
+    background: rgba(255, 60, 60, 0.1);
+    color: rgba(255, 160, 160, 0.9);
+}
+
+.profile-calendar-nav.is-danger:hover {
+    border-color: rgba(255, 90, 90, 0.65);
+    background: rgba(255, 60, 60, 0.22);
+    color: #ffffff;
+}
+
 .profile-calendar-weekdays {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -241,6 +253,17 @@ html, body {
     font-weight: 600;
 }
 
+.profile-calendar-cell.is-today {
+    border-color: rgba(255, 255, 255, 0.45);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+.profile-calendar-cell.is-today .profile-calendar-day {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-color: rgba(255, 255, 255, 0.45);
+}
+
 .profile-calendar-mark {
     align-self: flex-start;
     border-radius: 999px;
@@ -249,6 +272,27 @@ html, body {
     padding: 6px 10px;
     font-size: 11px;
     letter-spacing: 0.08em;
+}
+
+.profile-calendar-write-link {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px dashed rgba(255, 255, 255, 0.28);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 2.4rem;
+    text-decoration: none;
+    margin-top: 8px;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.profile-calendar-write-link:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.55);
+    color: #ffffff;
 }
 
 .profile-calendar-legend {
@@ -877,6 +921,57 @@ html, body {
     color: rgba(255, 255, 255, 0.6);
     line-height: 1.8;
     background: rgba(255, 255, 255, 0.03);
+}
+
+.persona-card.is-default {
+    border-color: rgba(255, 220, 120, 0.3);
+    background: rgba(255, 215, 100, 0.05);
+}
+
+.persona-card-summary-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.persona-default-badge {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255, 220, 100, 0.85);
+    background: rgba(255, 210, 80, 0.12);
+    border: 1px solid rgba(255, 210, 80, 0.28);
+    border-radius: 999px;
+    padding: 3px 10px;
+}
+
+.persona-default-btn {
+    border: none;
+    background: transparent;
+    color: rgba(255, 220, 100, 0.55);
+    font-size: 13px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    margin-right: 10px;
+}
+
+.persona-default-btn:hover {
+    color: rgba(255, 220, 100, 1);
+}
+
+.persona-edit-btn {
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 13px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    margin-right: 10px;
+}
+
+.persona-edit-btn:hover {
+    color: #ffffff;
 }
 
 .persona-delete-btn {
