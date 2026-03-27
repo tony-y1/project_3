@@ -73,11 +73,22 @@ function renderHashtags(hashtags, showEmpty = false) {
         if (showEmpty) {
             const msg = document.createElement("p");
             msg.className = "text-sm text-white/40 italic w-full";
-            msg.textContent = "해시태그를 생성할 수 없었어요.";
+            msg.textContent = "해시태그를 생성할 수 없어요.";
             wrapper.appendChild(msg);
         }
         return;
     }
+     // # 포함되거나 너무 긴 태그 필터링
+    hashtags = hashtags.filter(tag => !tag.includes("#") && tag.length <= 10);
+
+    if (!hashtags.length) {
+        const msg = document.createElement("p");
+        msg.className = "text-sm text-white/40 italic w-full";
+        msg.textContent = "해시태그를 생성할 수 없어요.";
+        wrapper.appendChild(msg);
+        return;
+    }
+    
     hashtags.forEach((tag) => {
         const span = document.createElement("span");
         span.className = "group relative px-3 py-1 rounded-full text-sm text-white/80 border border-white/20 bg-white/10 cursor-pointer hover:border-white/50 transition-all";
