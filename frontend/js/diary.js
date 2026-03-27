@@ -84,11 +84,11 @@ function renderHashtags(hashtags, showEmpty = false) {
     if (!hashtags.length) {
         const msg = document.createElement("p");
         msg.className = "text-sm text-white/40 italic w-full";
-        msg.textContent = "해시태그를 생성할 수 없어요.";
+        msg.textContent = "해시태그를 생성할 수 없는 내용이에요.";
         wrapper.appendChild(msg);
         return;
     }
-    
+
     hashtags.forEach((tag) => {
         const span = document.createElement("span");
         span.className = "group relative px-3 py-1 rounded-full text-sm text-white/80 border border-white/20 bg-white/10 cursor-pointer hover:border-white/50 transition-all";
