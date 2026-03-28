@@ -24,6 +24,8 @@ services:
     image: ${DOCKER_IMAGE}
     env_file:
       - .env
+    environment:
+      TZ: Asia/Seoul
     volumes:
       - img_data:/app/frontend/img
     depends_on:
