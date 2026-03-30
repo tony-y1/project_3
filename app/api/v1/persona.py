@@ -9,7 +9,7 @@ from app.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
 from app.models.persona import Persona
-from app.schemas.persona import PersonaCreate, PersonaUpdate, PersonaResponse
+from app.schemas.persona import PersonaCreate, PersonaUpdate, PersonaResponse, PersonaOnboardingRequest
 
 router = APIRouter()
 
@@ -152,3 +152,50 @@ async def delete_persona(
 
     await db.delete(persona)
     await db.commit()
+
+
+# ── POST /personas/onboarding ─ 온보딩 Q&A로 custom 페르소나 생성 ──
+# Q&A 답변 + 목소리 + 아바타를 받아 GPT로 설명 생성 후 저장
+@router.post("/onboarding", response_model=PersonaResponse, status_code=201)
+async def onboarding_persona(
+    body: PersonaOnboardingRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    from app.services.gpt_service import gpt_service
+
+    VALID_VOICES = {"alloy", "nova", "echo", "fable", "onyx", "shimmer"}
+    if body.voice and body.voice not in VALID_VOICES:
+        raise HTTPException(status_code=400, detail=f"voice는 {VALID_VOICES} 중 하나여야 합니다.")
+
+    # Q&A 답변으로 GPT 페르소나 설명 생성
+    custom_description = await gpt_service.generate_persona_description({
+        "nickname": body.nickname,
+        "pace": body.pace,
+        "reason": body.reason,
+        "style": body.style,
+        "memory": body.memory,
+    })
+
+    # 기존 active 페르소나 모두 비활성화
+    stmt_deactivate = select(Persona).where(
+        Persona.user_id == current_user.id,
+        Persona.is_active == True,
+    )
+    result_deactivate = await db.execute(stmt_deactivate)
+    for p in result_deactivate.scalars().all():
+        p.is_active = False
+
+    persona = Persona(
+        user_id=current_user.id,
+        name=body.name,
+        preset_type="custom",
+        custom_description=custom_description,
+        image_url=body.image_url,
+        voice=body.voice,
+        is_active=True,
+    )
+    db.add(persona)
+    await db.commit()
+    await db.refresh(persona)
+    return persona

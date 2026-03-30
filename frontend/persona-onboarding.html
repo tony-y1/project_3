@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>말벗 만들기 - "하루" commit()</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Petit+Formal+Script&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            background-color: #000;
+        }
+
+        #us-background {
+            position: fixed; inset: 0; z-index: 0;
+        }
+
+        .ob-layer { position: relative; z-index: 10; }
+
+        /* ── 스텝 카드 ── */
+        .ob-card {
+            display: none;
+            animation: ob-fade-in 0.4s ease;
+        }
+        .ob-card.active { display: block; }
+
+        @keyframes ob-fade-in {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── 진행 바 ── */
+        .ob-progress-bar {
+            height: 3px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+        .ob-progress-fill {
+            height: 100%;
+            background: rgba(255,255,255,0.7);
+            border-radius: 99px;
+            transition: width 0.4s ease;
+        }
+
+        /* ── 입력창 ── */
+        .ob-input {
+            width: 100%;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 14px 18px;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+            resize: none;
+        }
+        .ob-input::placeholder { color: rgba(255,255,255,0.3); }
+        .ob-input:focus { border-color: rgba(255,255,255,0.5); }
+
+        /* ── 선택지 버튼 ── */
+        .ob-choice {
+            width: 100%;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 14px 20px;
+            color: rgba(255,255,255,0.75);
+            font-size: 15px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .ob-choice:hover { background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.35); }
+        .ob-choice.selected { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.6); color: #fff; }
+
+        /* ── 목소리 카드 ── */
+        .ob-voice-card {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 16px;
+            padding: 20px 16px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .ob-voice-card:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.35); }
+        .ob-voice-card.selected { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.6); }
+        .ob-voice-emoji { font-size: 2rem; margin-bottom: 8px; }
+        .ob-voice-label { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+        .ob-voice-desc { font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.4; }
+
+        /* ── 아바타 카드 ── */
+        .ob-avatar-card {
+            border: 2px solid rgba(255,255,255,0.12);
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .ob-avatar-card:hover { border-color: rgba(255,255,255,0.4); transform: translateY(-2px); }
+        .ob-avatar-card.selected { border-color: rgba(255,255,255,0.8); }
+        .ob-avatar-placeholder {
+            width: 100%;
+            background: rgba(255,255,255,0.06);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 6px;
+            min-height: 120px;
+            padding: 16px 0;
+        }
+        .ob-avatar-placeholder-emoji { font-size: 2.4rem; }
+        .ob-avatar-placeholder-label { font-size: 12px; color: rgba(255,255,255,0.4); }
+        .ob-avatar-selected-mark {
+            display: none;
+            position: absolute; inset: 0;
+            background: rgba(255,255,255,0.1);
+            align-items: center; justify-content: center;
+            font-size: 1.8rem;
+        }
+        .ob-avatar-card.selected .ob-avatar-selected-mark { display: flex; }
+
+        /* ── 버튼 ── */
+        .ob-btn-primary {
+            background: rgba(255,255,255,0.9);
+            color: #10101e;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 32px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+        .ob-btn-primary:hover { background: #fff; }
+        .ob-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .ob-btn-ghost {
+            background: transparent;
+            color: rgba(255,255,255,0.5);
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 8px;
+            transition: color 0.2s;
+        }
+        .ob-btn-ghost:hover { color: rgba(255,255,255,0.8); }
+
+        /* ── 미리보기 ── */
+        .ob-preview-box {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 16px;
+            padding: 24px;
+            color: rgba(255,255,255,0.85);
+            font-size: 15px;
+            line-height: 1.8;
+        }
+
+        /* ── 로딩 ── */
+        .ob-loading-dots span {
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.6);
+            animation: ob-dot 1.2s infinite;
+            margin: 0 3px;
+        }
+        .ob-loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .ob-loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes ob-dot {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+            40%            { transform: scale(1);   opacity: 1; }
+        }
+    </style>
+</head>
+<body class="min-h-screen relative font-kr">
+
+    <div id="us-background" data-us-project="ZnNikMOUWaAR1UzFsvqp"></div>
+
+    <main class="ob-layer min-h-screen flex items-center justify-center px-4 py-12">
+        <div class="w-full max-w-lg">
+
+            <!-- 진행 바 (스텝 1~8에서만 표시) -->
+            <div id="ob-progress-wrap" class="mb-8 hidden">
+                <div class="flex justify-between text-xs text-white/40 mb-2">
+                    <span id="ob-step-label">1 / 8</span>
+                    <button class="ob-btn-ghost text-xs" onclick="obSkip()">건너뛰기</button>
+                </div>
+                <div class="ob-progress-bar">
+                    <div id="ob-progress-fill" class="ob-progress-fill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Step 0: 인트로 -->
+            <div id="ob-step-0" class="ob-card active text-center">
+                <h1 class="text-2xl md:text-2xl font-semibold text-white mb-4 leading-tight">
+                    안녕하세요, 처음 뵈어요😊<br>잠깐, 먼저 인사부터 해도 될까요?
+                </h1>
+                <p class="text-white/50 text-sm mb-10 leading-relaxed">
+                    몇 가지 질문에 답해주시면<br>
+                    나만의 말벗을 만들어드릴게요.
+                </p>
+                <button class="ob-btn-primary" onclick="obGoNext()">시작하기</button>
+                <div class="mt-4">
+                    <button class="ob-btn-ghost" onclick="obSkipAll()">나중에 할게요</button>
+                </div>
+            </div>
+
+            <!-- Step 1: 호칭 -->
+            <div id="ob-step-1" class="ob-card">
+                <p class="text-white/40 text-sm mb-2">Q1</p>
+                <h2 class="text-2xl font-semibold text-white mb-2">말벗이 뭐라고 불러드릴까요?</h2>
+                <p class="text-white/40 text-sm mb-6">일기를 읽을 때 이 호칭으로 불러드려요.</p>
+                <div class="grid grid-cols-4 gap-2 mb-4">
+                    <button class="ob-choice text-center px-2" onclick="obSelectNickname(this, '친구')">친구</button>
+                    <button class="ob-choice text-center px-2" onclick="obSelectNickname(this, '언니')">언니</button>
+                    <button class="ob-choice text-center px-2" onclick="obSelectNickname(this, '오빠')">오빠</button>
+                    <button class="ob-choice text-center px-2" onclick="obSelectNickname(this, '누나')">누나</button>
+                    <button class="ob-choice text-center px-2" onclick="obSelectNickname(this, '형')">형</button>
+                </div>
+                <input id="ob-nickname" class="ob-input" type="text"
+                    placeholder="직접 입력 (예: 친구, 소희, 나)" maxlength="10"
+                    oninput="obClearNicknameChoice()" />
+                <p id="ob-nickname-hint" class="text-white/30 text-xs mt-2 hidden">
+                    선택하지 않으면 닉네임(<span id="ob-nickname-default"></span>)으로 불러드릴게요.
+                </p>
+                <button class="ob-btn-primary mt-4" onclick="obNext1()">다음</button>
+            </div>
+
+            <!-- Step 2: 하루 페이스 -->
+            <div id="ob-step-2" class="ob-card">
+                <p class="text-white/40 text-sm mb-2">Q2</p>
+                <h2 class="text-2xl font-semibold text-white mb-2">요즘 하루가 어때요?</h2>
+                <p class="text-white/40 text-sm mb-8">말벗이 톤을 맞춰드릴게요.</p>
+                <div class="flex flex-col gap-3">
+                    <button class="ob-choice" onclick="obSelectChoice(this, 'pace')">☕ 천천히, 여유롭게 흘러가요</button>
+                    <button class="ob-choice" onclick="obSelectChoice(this, 'pace')">🌀 바쁘게, 정신없이 지나가요</button>
+                    <button class="ob-choice" onclick="obSelectChoice(this, 'pace')">🎲 들쑥날쑥해요</button>
+                </div>
+                <button class="ob-btn-primary mt-6" onclick="obNext2()">다음</button>
+                <div class="mt-3 text-center">
+                    <button class="ob-btn-ghost" onclick="obGoPrev()">← 이전</button>
+                </div>
+            </div>
+
+            <!-- Step 3: 일기 쓰는 이유 -->
+            <div id="ob-step-3" class="ob-card">
+                <p class="text-white/40 text-sm mb-2">Q3</p>
+                <h2 class="text-2xl font-semibold text-white mb-2">왜 일기를 쓰고 싶으세요?</h2>
+                <p class="text-white/40 text-sm mb-8">말벗이 그 마음을 기억할게요.</p>
+                <textarea id="ob-reason" class="ob-input" rows="4"
+                    placeholder="예) 하루를 정리하고 싶어서요 / 감정을 털어내고 싶어서요"></textarea>
+                <button class="ob-btn-primary mt-4" onclick="obNext3()">다음</button>
+                <div class="mt-3 text-center">
+                    <button class="ob-btn-ghost" onclick="obGoPrev()">← 이전</button>
+                </div>
+            </div>
+
+            <!-- Step 4: 말벗 스타일 -->
+            <div id="ob-step-4" class="ob-card">
+                <p class="text-white/40 text-sm mb-2">Q4</p>
+                <h2 class="text-2xl font-semibold text-white mb-2">어떤 말벗이었으면 해요?</h2>
+                <p class="text-white/40 text-sm mb-8">일기에 반응하는 방식을 정해드려요.</p>
+                <div class="flex flex-col gap-3">
+                    <button class="ob-choice" onclick="obSelectChoice(this, 'style')">🤗 그냥 공감해줬으면 해요</button>
+                    <button class="ob-choice" onclick="obSelectChoice(this, 'style')">💡 조언을 해줬으면 해요 </button>
+                    <button class="ob-choice" onclick="obSelectChoice(this, 'style')">🧠 같이 생각을 정리해줬으면 해요</button>
+                    <button class="ob-choice" onclick="obSelectChoice(this, 'style')">😄 가볍게 대화하고 싶어요 </button>
+                    <button class="ob-choice" onclick="obSelectChoice(this, 'style')">📣 솔직하게 말해주는 친구가 필요해요 </button>
+                </div>
+                <button class="ob-btn-primary mt-6" onclick="obNext4()">다음</button>
+                <div class="mt-3 text-center">
+                    <button class="ob-btn-ghost" onclick="obGoPrev()">← 이전</button>
+                </div>
+            </div>
+
+            <!-- Step 5: 기억해줬으면 하는 것 (선택) -->
+            <div id="ob-step-5" class="ob-card">
+                <p class="text-white/40 text-sm mb-2">Q5 <span class="text-white/30">(선택)</span></p>
+                <h2 class="text-2xl font-semibold text-white mb-2">꼭 기억해줬으면 하는 게 있나요?</h2>
+                <p class="text-white/40 text-sm mb-8">없으면 건너뛰어도 돼요.🙂</p>
+                <textarea id="ob-memory" class="ob-input" rows="3"
+                    placeholder="예) 요즘 취업 준비 중이에요 / 강아지를 키워요"></textarea>
+                <button class="ob-btn-primary mt-4" onclick="obNext5()">다음</button>
+                <div class="mt-3 text-center">
+                    <button class="ob-btn-ghost" onclick="obGoPrev()">← 이전</button>
+                </div>
+            </div>
+
+            <!-- Step 6: 말벗 이름 -->
+            <div id="ob-step-6" class="ob-card">
+                <p class="text-white/40 text-sm mb-2">마지막으로</p>
+                <h2 class="text-2xl font-semibold text-white mb-2">말벗에게 이름을 지어줄게요</h2>
+                <p class="text-white/40 text-sm mb-8">나만의 말벗 이름이에요.</p>
+                <input id="ob-persona-name" class="ob-input" type="text"
+                    placeholder="예) 다정이, 별이, 솔" maxlength="10" />
+                <button class="ob-btn-primary mt-4" onclick="obNext6()">다음</button>
+                <div class="mt-3 text-center">
+                    <button class="ob-btn-ghost" onclick="obGoPrev()">← 이전</button>
+                </div>
+            </div>
+
+            <!-- Step 7: 목소리 선택 -->
+            <div id="ob-step-7" class="ob-card">
+                <h2 class="text-2xl font-semibold text-white mb-2">말벗의 목소리를 골라주세요</h2>
+                <p class="text-white/40 text-sm mb-6">일기 피드백을 이 목소리로 들려드려요.</p>
+                <div id="ob-voice-grid" class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6"></div>
+                <button class="ob-btn-primary" onclick="obNext7()">다음</button>
+                <div class="mt-3 text-center">
+                    <button class="ob-btn-ghost" onclick="obGoPrev()">← 이전</button>
+                </div>
+            </div>
+
+            <!-- Step 8: 생성 중 -->
+            <div id="ob-step-8" class="ob-card text-center py-12">
+                <div class="ob-loading-dots mb-6">
+                    <span></span><span></span><span></span>
+                </div>
+                <p class="text-white/70 text-lg">말벗을 만들고 있어요</p>
+                <p class="text-white/30 text-sm mt-2">잠깐만 기다려주세요...</p>
+            </div>
+
+            <!-- Step 9: 미리보기 -->
+            <div id="ob-step-9" class="ob-card">
+                <p class="font-script text-xl text-white/60 mb-3" id="ob-preview-greeting">—</p>
+                <h2 class="text-2xl font-semibold text-white mb-6" id="ob-preview-name">—</h2>
+                <div class="ob-preview-box mb-6" id="ob-preview-desc">—</div>
+                <div class="flex flex-col gap-3">
+                    <button class="ob-btn-primary" onclick="obConfirm()">좋아요!</button>
+                    <button class="ob-btn-ghost" onclick="obRetry()">다시 만들어볼게요</button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="js/frontend.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        const VOICES = [
+            { id: "alloy",   emoji: "🌙", label: "알로이",  desc: "중성적, 차분한 목소리" },
+            { id: "nova",    emoji: "🌸", label: "노바",    desc: "여성적, 따뜻한 목소리" },
+            { id: "echo",    emoji: "🌊", label: "에코",    desc: "남성적, 묵직한 목소리" },
+            { id: "fable",   emoji: "📖", label: "페이블",  desc: "부드럽고 표현력 있는 목소리" },
+            { id: "onyx",    emoji: "🪨", label: "오닉스",  desc: "깊고 안정적인 남성 목소리" },
+            { id: "shimmer", emoji: "✨", label: "쉬머",    desc: "밝고 명랑한 여성 목소리" },
+        ];
+
+        const TOTAL_STEPS = 7;
+        let currentStep = 0;
+
+        const answers = {
+            nickname: "", pace: "", reason: "", style: "",
+            memory: "", personaName: "", voice: "",
+        };
+
+        // 받침 여부에 따라 을/를 반환
+        function eulReul(word) {
+            if (!word) return "을";
+            const code = word.charCodeAt(word.length - 1);
+            if (code < 0xAC00 || code > 0xD7A3) return "을";
+            return (code - 0xAC00) % 28 === 0 ? "를" : "을";
+        }
+
+        // ── 스텝 이동 ────────────────────────────────────
+        function obShowStep(step) {
+            document.querySelectorAll(".ob-card").forEach(el => el.classList.remove("active"));
+            document.getElementById(`ob-step-${step}`)?.classList.add("active");
+
+            const progressWrap = document.getElementById("ob-progress-wrap");
+            const isProgressStep = step >= 1 && step <= 7;
+            progressWrap.classList.toggle("hidden", !isProgressStep);
+
+            if (isProgressStep) {
+                document.getElementById("ob-step-label").textContent = `${step} / ${TOTAL_STEPS}`;
+                document.getElementById("ob-progress-fill").style.width = `${(step / TOTAL_STEPS) * 100}%`;
+            }
+
+            currentStep = step;
+        }
+
+        function obGoNext() { obShowStep(currentStep + 1); }
+        function obGoPrev() { obShowStep(currentStep - 1); }
+
+        // Q5는 선택 항목이라 건너뛰기 허용
+        function obSkip() {
+            if (currentStep === 5) { answers.memory = ""; obGoNext(); }
+        }
+
+        function obSkipAll() {
+            window.location.href = "profile.html";
+        }
+
+        // ── 선택지 ──────────────────────────────────────
+        function obSelectChoice(btn, field) {
+            btn.closest(".flex").querySelectorAll(".ob-choice")
+               .forEach(b => b.classList.remove("selected"));
+            btn.classList.add("selected");
+            answers[field] = btn.textContent.trim();
+        }
+
+        // ── 각 스텝 다음 버튼 ────────────────────────────
+        // 호칭 선택지 클릭: 버튼 선택 표시 + 입력창 비우기
+        function obSelectNickname(btn, value) {
+            document.querySelectorAll("#ob-step-1 .ob-choice")
+                .forEach(b => b.classList.remove("selected"));
+            btn.classList.add("selected");
+            document.getElementById("ob-nickname").value = "";
+            answers.nickname = value;
+        }
+
+        // 직접 입력 시 선택지 해제
+        function obClearNicknameChoice() {
+            document.querySelectorAll("#ob-step-1 .ob-choice")
+                .forEach(b => b.classList.remove("selected"));
+            answers.nickname = "";
+        }
+
+        function obNext1() {
+            const typed = document.getElementById("ob-nickname").value.trim();
+            if (typed) answers.nickname = typed;
+            // 선택도 입력도 없으면 가입 닉네임을 기본 호칭으로 사용
+            if (!answers.nickname) answers.nickname = defaultNickname;
+            obGoNext();
+        }
+        function obNext2() {
+            if (!answers.pace) { showAppToast("선택지를 골라주세요.", "info", "선택 필요"); return; }
+            obGoNext();
+        }
+        function obNext3() {
+            const val = document.getElementById("ob-reason").value.trim();
+            if (!val) { showAppToast("이유를 간단히 적어주세요.", "info", "입력 필요"); return; }
+            answers.reason = val;
+            obGoNext();
+        }
+        function obNext4() {
+            if (!answers.style) { showAppToast("선택지를 골라주세요.", "info", "선택 필요"); return; }
+            obGoNext();
+        }
+        function obNext5() {
+            answers.memory = document.getElementById("ob-memory").value.trim();
+            obGoNext();
+        }
+        function obNext6() {
+            const val = document.getElementById("ob-persona-name").value.trim();
+            if (!val) { showAppToast("말벗 이름을 입력해주세요.", "info", "입력 필요"); return; }
+            answers.personaName = val;
+            obGoNext();
+        }
+        async function obNext7() {
+            if (!answers.voice) { showAppToast("목소리를 선택해주세요.", "info", "선택 필요"); return; }
+            obShowStep(8); // 로딩
+            await obGenerate();
+        }
+
+        // ── GPT 페르소나 생성 ────────────────────────────
+        let lastPersonaId = null; // 재생성 시 이전 페르소나 삭제용
+
+        async function obGenerate() {
+            try {
+                // 이전에 생성된 페르소나가 있으면 먼저 삭제
+                if (lastPersonaId) {
+                    await apiRequest(`/personas/${lastPersonaId}`, { method: "DELETE" }).catch(() => {});
+                    lastPersonaId = null;
+                }
+
+                const result = await apiRequest("/personas/onboarding", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        name: answers.personaName,
+                        nickname: answers.nickname,
+                        pace: answers.pace,
+                        reason: answers.reason,
+                        style: answers.style,
+                        memory: answers.memory || null,
+                        voice: answers.voice,
+                    }),
+                });
+                lastPersonaId = result.id; // 다음 재시도를 위해 ID 저장
+                obShowPreview(result);
+            } catch (err) {
+                showAppToast(err.message || "말벗 생성에 실패했어요. 다시 시도해주세요.", "error", "생성 실패");
+                obShowStep(7); // 목소리 선택으로 돌아가기
+            }
+        }
+
+        function obShowPreview(persona) {
+            document.getElementById("ob-preview-name").textContent = persona.name;
+            document.getElementById("ob-preview-desc").textContent = persona.custom_description;
+            document.getElementById("ob-preview-greeting").textContent = `고마워요! 이제 ${answers.nickname}${eulReul(answers.nickname)} 조금 알 것 같아요`;
+            obShowStep(9); // 미리보기
+        }
+
+        function obConfirm() {
+            window.location.href = "profile.html";
+        }
+
+        async function obRetry() {
+            obShowStep(8); // 로딩
+            await obGenerate();
+        }
+
+        // ── 목소리 샘플 재생 ─────────────────────────────
+        let currentAudio = null;
+        function playVoiceSample(voiceId) {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+            currentAudio = new Audio(`audio/voice_sample_${voiceId}.mp3`);
+            currentAudio.play().catch(() => {}); // 파일 없으면 조용히 무시
+        }
+
+        // ── 목소리 카드 렌더링 ───────────────────────────
+        function renderVoiceGrid() {
+            const grid = document.getElementById("ob-voice-grid");
+            VOICES.forEach(v => {
+                const card = document.createElement("div");
+                card.className = "ob-voice-card";
+                card.innerHTML = `
+                    <div class="ob-voice-emoji">${v.emoji}</div>
+                    <div class="ob-voice-label">${v.label}</div>
+                    <div class="ob-voice-desc">${v.desc}</div>
+                    <div class="ob-voice-play text-white/30 text-xs mt-2">▶ 미리 듣기</div>
+                `;
+                card.addEventListener("click", () => {
+                    grid.querySelectorAll(".ob-voice-card").forEach(c => c.classList.remove("selected"));
+                    card.classList.add("selected");
+                    answers.voice = v.id;
+                    playVoiceSample(v.id);
+                });
+                grid.appendChild(card);
+            });
+        }
+
+        // ── 아바타 카드 렌더링 ───────────────────────────
+        function renderAvatarGrid() {
+            const grid = document.getElementById("ob-avatar-grid");
+            AVATARS.forEach(a => {
+                const card = document.createElement("div");
+                card.className = "ob-avatar-card";
+
+                // 이미지 로드 성공 시 표시, 실패 시 플레이스홀더
+                card.innerHTML = `
+                    <div class="ob-avatar-placeholder">
+                        <span class="ob-avatar-placeholder-emoji">${a.emoji}</span>
+                        <span class="ob-avatar-placeholder-label">${a.label}</span>
+                    </div>
+                    <div class="ob-avatar-selected-mark">✓</div>
+                `;
+                const img = new Image();
+                img.src = a.src;
+                img.onload = () => {
+                    card.querySelector(".ob-avatar-placeholder").innerHTML =
+                        `<img src="${a.src}" style="width:100%;min-height:120px;object-fit:cover;" />`;
+                };
+
+                card.addEventListener("click", () => {
+                    grid.querySelectorAll(".ob-avatar-card").forEach(c => c.classList.remove("selected"));
+                    card.classList.add("selected");
+                    answers.imageUrl = a.src;
+                });
+                grid.appendChild(card);
+            });
+        }
+
+        // 가입 닉네임 불러와서 Q1 힌트에 표시
+        let defaultNickname = "";
+        try {
+            const user = JSON.parse(localStorage.getItem("auth_user") || "{}");
+            defaultNickname = user.nickname || "";
+            if (defaultNickname) {
+                document.getElementById("ob-nickname-default").textContent = defaultNickname;
+                document.getElementById("ob-nickname-hint").classList.remove("hidden");
+            }
+        } catch (_) {}
+
+        if (typeof initUnicornStudio === "function") initUnicornStudio();
+        renderVoiceGrid();
+        obShowStep(0);
+    </script>
+</body>
+</html>
