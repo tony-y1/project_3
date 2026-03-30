@@ -26,7 +26,7 @@ function populateAlarmTimeSelects() {
 
 function getAlarmTimeValue() {
   const ampm = document.getElementById("alarm-ampm")?.value;
-  const hourRaw = parseInt(document.getElementById("alarm-hour")?.value || "0");
+  const hourRaw = parseInt(document.getElementById("alarm-hour")?.value || "0", 10);
   const minute = document.getElementById("alarm-minute")?.value || "00";
 
   if (!ampm || !hourRaw) return null;
@@ -40,7 +40,7 @@ function getAlarmTimeValue() {
 
 function setAlarmTimeSelects(timeStr) {
   const [hhStr, mmStr] = timeStr.split(":");
-  const hh = parseInt(hhStr);
+  const hh = parseInt(hhStr, 10);
 
   const ampm = hh < 12 ? "AM" : "PM";
   const hour12 = hh % 12 === 0 ? 12 : hh % 12;
@@ -269,7 +269,7 @@ async function loadAlarms() {
   console.log("loadAlarms token:", token);
 
   if (!token) {
-    alert("로그인이 필요합니다.");
+    showAppToast("로그인이 필요합니다.", "error", "인증 오류");
     return;
   }
 
@@ -295,17 +295,17 @@ async function loadAlarms() {
     renderAlarmList(alarms);
   } catch (error) {
     console.error("알람 목록 조회 실패", error);
-    alert("알람 목록을 불러오지 못했습니다.");
+    showAppToast("알람 목록을 불러오지 못했습니다.", "error", "오류");
   }
 }
 
 // 알람 삭제
 async function deleteAlarm(alarmId) {
-  if (!confirm("알람을 삭제할까요?")) return;
+  if (!await showAppConfirm("알람을 삭제할까요?", "알람 삭제")) return;
 
   const token = getAccessToken();
   if (!token) {
-    alert("로그인이 필요합니다.");
+    showAppToast("로그인이 필요합니다.", "error", "인증 오류");
     return;
   }
 
@@ -326,7 +326,7 @@ async function deleteAlarm(alarmId) {
     await loadAlarms();
   } catch (error) {
     console.error("알람 삭제 실패:", error);
-    alert("알람 삭제에 실패했습니다.");
+    showAppToast("알람 삭제에 실패했습니다.", "error", "삭제 실패");
   }
 }
 
@@ -334,20 +334,20 @@ async function deleteAlarm(alarmId) {
 async function saveAlarm() {
   const token = getAccessToken();
   if (!token) {
-    alert("로그인이 필요합니다.");
+    showAppToast("로그인이 필요합니다.", "error", "인증 오류");
     return;
   }
 
   const alarmTime = getAlarmTimeValue();
   if (!alarmTime) {
-    alert("알람 시간을 선택해주세요.");
+    showAppToast("알람 시간을 선택해주세요.", "info", "입력 확인");
     return;
   }
 
   const repeatDays = getSelectedRepeatDays();
 
   if (repeatDays.length === 0) {
-    alert("반복 요일을 하나 이상 선택해주세요.");
+    showAppToast("반복 요일을 하나 이상 선택해주세요.", "info", "입력 확인");
     return;
   }
 
@@ -378,13 +378,13 @@ async function saveAlarm() {
     }
 
     await response.json();
-    alert(isEditMode ? "알람이 수정되었습니다." : "알람이 저장되었습니다.");
+    showAppToast(isEditMode ? "알람이 수정되었습니다." : "알람이 저장되었습니다.", "success", isEditMode ? "수정 완료" : "저장 완료");
 
     showAlarmListView();
     await loadAlarms();
   } catch (error) {
     console.error("알람 저장/수정 실패:", error);
-    alert("알람 저장에 실패했습니다.");
+    showAppToast("알람 저장에 실패했습니다.", "error", "저장 실패");
   }
 }
 

@@ -245,7 +245,7 @@ function closeSearchModal() {
 //     const content = contentInput.value.trim();
 
 //     if (!date || !title || !content) {
-//         alert("날짜, 제목, 일기 내용을 모두 입력해주세요.");
+//         showAppToast("날짜, 제목, 일기 내용을 모두 입력해주세요.", "info", "입력 확인");
 //         return;
 //     }
 
@@ -279,8 +279,9 @@ function closeSearchModal() {
 //     closeDiaryModal();
 // }
 
-function deleteDiaryBook(button) {
-    if (!confirm("삭제하시겠습니까?")) {
+async function deleteDiaryBook(button) {
+    const isConfirmed = await showAppConfirm("삭제하시겠습니까?", "일기 삭제");
+    if (!isConfirmed) {
         return;
     }
 
@@ -397,7 +398,7 @@ async function DiarySearch() {
 
 
     if (!keyword) {
-        alert("검색하고 싶은 내용을 입력해주세요.");
+        showAppToast("검색하고 싶은 내용을 입력해주세요.", "info", "입력 확인");
         return;
     }
 
@@ -544,9 +545,9 @@ function renderProfileCalendar() {
 
         let badge = "";
         if (hasDiary) {
-            badge = '<span class="profile-calendar-mark">작성 완료</span>';
+            badge = '<span class="profile-calendar-mark"><i class="fa-solid fa-book-quran"></i><span>작성 완료</span></span>';
         } else if (isToday) {
-            badge = '<a href="diary_write.html" class="profile-calendar-write-link"><i class="fa-solid fa-book-quran"></i></a>';
+            badge = '<a href="diary_write.html" class="profile-calendar-write-link"><i class="fa-solid fa-pen-nib"></i><span>작성하기</span></a>';
         }
 
         cell.className = `profile-calendar-cell${hasDiary ? " has-diary" : ""}${isToday ? " is-today" : ""}`;
@@ -864,7 +865,7 @@ async function setDefaultPersona(button) {
         // 기본 페르소나 카드를 목록 최상단으로
         if (personaList) personaList.prepend(card);
     } catch (error) {
-        alert(error.message || "기본 페르소나 설정에 실패했어요.");
+        showAppToast(error.message || "기본 페르소나 설정에 실패했어요.", "error", "설정 실패");
     }
 }
 
@@ -968,7 +969,7 @@ async function addPersona() {
     const editId = editIdInput?.value.trim() || "";
 
     if (!name || !tone || !style) {
-        alert("모든 항목을 입력해주세요.");
+        showAppToast("모든 항목을 입력해주세요.", "info", "입력 확인");
         return;
     }
 
@@ -998,7 +999,7 @@ async function addPersona() {
 
             cancelPersonaEdit();
         } catch (error) {
-            alert(error.message || "페르소나 수정에 실패했어요.");
+            showAppToast(error.message || "페르소나 수정에 실패했어요.", "error", "수정 실패");
         }
         return;
     }
@@ -1024,7 +1025,7 @@ async function addPersona() {
         toneInput.value = "";
         styleInput.value = "";
     } catch (error) {
-        alert(error.message || "페르소나 저장에 실패했어요.");
+        showAppToast(error.message || "페르소나 저장에 실패했어요.", "error", "저장 실패");
     }
 }
 
@@ -1048,7 +1049,7 @@ async function deletePersona(button) {
             renderPersonaEmpty();
         }
     } catch (error) {
-        alert(error.message || "페르소나 삭제에 실패했어요.");
+        showAppToast(error.message || "페르소나 삭제에 실패했어요.", "error", "삭제 실패");
     }
 }
 
@@ -1103,3 +1104,104 @@ window.addEventListener("DOMContentLoaded", () => {
 
     renderDiaryProgress();
 });
+
+/* =========================
+   Toast / Confirm UI
+========================= */
+function _ensureToastContainer() {
+    let container = document.getElementById("alarm-toast-container");
+    if (!container) {
+        container = document.createElement("div");
+        container.id = "alarm-toast-container";
+        container.className = "alarm-toast-container";
+        container.setAttribute("aria-live", "polite");
+        container.setAttribute("aria-atomic", "true");
+        document.body.appendChild(container);
+    }
+    return container;
+}
+
+function _ensureConfirmModal() {
+    let modal = document.getElementById("alarm-confirm-modal");
+    if (!modal) {
+        modal = document.createElement("div");
+        modal.id = "alarm-confirm-modal";
+        modal.className = "alarm-feedback-modal hidden";
+        modal.setAttribute("role", "dialog");
+        modal.setAttribute("aria-modal", "true");
+        modal.setAttribute("aria-labelledby", "alarm-confirm-title");
+        modal.innerHTML = `
+            <div class="alarm-feedback-backdrop" data-alarm-confirm-close="backdrop"></div>
+            <div class="alarm-feedback-card">
+                <p class="profile-calendar-caption">Notice</p>
+                <h3 id="alarm-confirm-title" class="alarm-feedback-title">확인</h3>
+                <p id="alarm-confirm-message" class="alarm-feedback-message">진행하시겠습니까?</p>
+                <div class="alarm-feedback-actions">
+                    <button type="button" id="alarm-confirm-cancel-btn" class="profile-calendar-nav">취소</button>
+                    <button type="button" id="alarm-confirm-ok-btn" class="profile-calendar-nav is-danger">확인</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    return modal;
+}
+
+function showAppToast(message, type = "info", title = "Notice") {
+    const container = _ensureToastContainer();
+
+    const toast = document.createElement("div");
+    toast.className = `alarm-toast is-${type}`;
+    toast.setAttribute("role", "status");
+    toast.innerHTML = `
+        <div class="alarm-toast-title">${escapeHtml(title)}</div>
+        <div class="alarm-toast-message">${escapeHtml(message || "")}</div>
+    `;
+
+    container.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add("show"));
+
+    let removed = false;
+    const removeToast = () => {
+        if (removed) return;
+        removed = true;
+        toast.classList.remove("show");
+        window.setTimeout(() => toast.remove(), 220);
+    };
+    window.setTimeout(removeToast, 3000);
+}
+
+function showAppConfirm(message, title = "확인") {
+    const modal = _ensureConfirmModal();
+    const messageEl = document.getElementById("alarm-confirm-message");
+    const titleEl = document.getElementById("alarm-confirm-title");
+    const confirmBtn = document.getElementById("alarm-confirm-ok-btn");
+    const cancelBtn = document.getElementById("alarm-confirm-cancel-btn");
+    const backdrop = modal.querySelector("[data-alarm-confirm-close='backdrop']");
+
+    messageEl.textContent = message;
+    titleEl.textContent = title;
+    modal.classList.remove("hidden");
+
+    return new Promise((resolve) => {
+        const cleanup = () => {
+            modal.classList.add("hidden");
+            confirmBtn.removeEventListener("click", handleConfirm);
+            cancelBtn.removeEventListener("click", handleCancel);
+            backdrop.removeEventListener("click", handleCancel);
+            document.removeEventListener("keydown", handleKeydown);
+        };
+        const handleConfirm = () => { cleanup(); resolve(true); };
+        const handleCancel = () => { cleanup(); resolve(false); };
+        const handleKeydown = (e) => { if (e.key === "Escape") handleCancel(); };
+
+        confirmBtn.addEventListener("click", handleConfirm);
+        cancelBtn.addEventListener("click", handleCancel);
+        backdrop.addEventListener("click", handleCancel);
+        document.addEventListener("keydown", handleKeydown);
+        confirmBtn.focus();
+    });
+}
+
+window.showAppToast = showAppToast;
+window.showAppConfirm = showAppConfirm;

@@ -138,9 +138,26 @@ class DiaryService:
         db: AsyncSession,
         diary: Diary,
     ) -> None:
+        from app.models.hashtag import DiaryHashtag
+        from app.models.ai_feedback import AiFeedback
+        from sqlalchemy import select as sa_select
+
+        # 연결된 해시태그 먼저 삭제
+        stmt_dh = sa_select(DiaryHashtag).where(DiaryHashtag.diary_id == diary.id)
+        result_dh = await db.execute(stmt_dh)
+        for dh in result_dh.scalars().all():
+            await db.delete(dh)
+
+        # 연결된 피드백 먼저 삭제
+        stmt_fb = sa_select(AiFeedback).where(AiFeedback.diary_id == diary.id)
+        result_fb = await db.execute(stmt_fb)
+        feedback = result_fb.scalar_one_or_none()
+        if feedback:
+            await db.delete(feedback)
+
+        await db.flush()
         await db.delete(diary)
         await db.commit()
-
 
     # ── 해시태그 추가 ─────────────────────────────
     async def add_hashtags(

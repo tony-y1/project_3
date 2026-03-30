@@ -101,12 +101,26 @@
 
                             <div>
                                 <label class="diary-detail-label">오늘의 감정</label>
-                                <input id="diary-emotion" type="text" class="diary-detail-input" placeholder="오늘의 감정을 입력하세요">
+                                <div class="diary-icon-select" id="emotion-icon-select">
+                                    <button type="button" class="diary-icon-select-trigger">
+                                        <span class="diary-icon-select-emoji"></span>
+                                        <span class="diary-icon-select-label">감정 선택</span>
+                                        <span class="diary-icon-select-arrow">▼</span>
+                                    </button>
+                                </div>
+                                <input type="hidden" id="diary-emotion">
                             </div>
 
                             <div>
                                 <label class="diary-detail-label">날씨</label>
-                                <input id="diary-weather" type="text" class="diary-detail-input" placeholder="오늘의 날씨를 입력하세요">
+                                <div class="diary-icon-select" id="weather-icon-select">
+                                    <button type="button" class="diary-icon-select-trigger">
+                                        <span class="diary-icon-select-emoji"></span>
+                                        <span class="diary-icon-select-label">날씨 선택</span>
+                                        <span class="diary-icon-select-arrow">▼</span>
+                                    </button>
+                                </div>
+                                <input type="hidden" id="diary-weather">
                             </div>
                         </div>
 

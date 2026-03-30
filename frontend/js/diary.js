@@ -23,7 +23,7 @@ function createDiaryCard(diary) {
 
     book.querySelector(".diary-book-delete").addEventListener("click", async (e) => {
         e.stopPropagation();
-        if (!window.confirm("이 일기를 삭제할까요?")) return;
+        if (!await showAppConfirm("이 일기를 삭제할까요?", "일기 삭제")) return;
 
         try {
             await deleteDiary(diary.id);
@@ -42,7 +42,7 @@ function createDiaryCard(diary) {
             updateDiaryShelfPosition();
             renderDiaryProgress();
         } catch (error) {
-            window.alert(error.message || "일기 삭제에 실패했어요.");
+            showAppToast(error.message || "일기 삭제에 실패했어요.", "error", "삭제 실패");
         }
     });
 
@@ -121,7 +121,7 @@ async function removeHashtag(button, tagName) {
         );
         span.remove();
     } catch (_) {
-        window.alert("해시태그 삭제에 실패했어요.");
+        showAppToast("해시태그 삭제에 실패했어요.", "error", "삭제 실패");
     }
 }
 
@@ -268,7 +268,7 @@ async function handleDiaryCreateSubmit(event) {
     const content = contentInput.value.trim();
 
     if (!diaryDate || !content) {
-        window.alert("날짜와 일기 내용을 입력해주세요.");
+        showAppToast("날짜와 일기 내용을 입력해주세요.", "info", "입력 확인");
         return;
     }
 
@@ -290,7 +290,7 @@ async function handleDiaryCreateSubmit(event) {
         window.location.href = `diary_read.html?id=${encodeURIComponent(diary.id)}&autoplay=${autoplay}`;
 
     } catch (error) {
-        window.alert(error.message || "일기 저장에 실패했어요.");
+        showAppToast(error.message || "일기 저장에 실패했어요.", "error", "저장 실패");
     } finally {
         saveButton.disabled = false;
         saveButton.textContent = "저장하기";
@@ -306,6 +306,111 @@ function initDiaryListPage() {
     renderDiaryShelfFromApi();
 }
 
+const EMOTION_OPTIONS = [
+    { emoji: "😊", label: "행복" },
+    { emoji: "🥰", label: "설렘" },
+    { emoji: "🤩", label: "신남" },
+    { emoji: "😌", label: "평온" },
+    { emoji: "😢", label: "슬픔" },
+    { emoji: "😔", label: "우울" },
+    { emoji: "😡", label: "화남" },
+    { emoji: "😤", label: "답답" },
+    { emoji: "😰", label: "불안" },
+    { emoji: "😴", label: "피곤" },
+];
+
+const WEATHER_OPTIONS = [
+    { emoji: "☀️", label: "맑음" },
+    { emoji: "⛅", label: "구름" },
+    { emoji: "☁️", label: "흐림" },
+    { emoji: "🌧️", label: "비" },
+    { emoji: "⛈️", label: "천둥" },
+    { emoji: "🌨️", label: "눈" },
+    { emoji: "🌬️", label: "바람" },
+    { emoji: "🌫️", label: "안개" },
+];
+
+function initIconSelect(wrapperId, options, hiddenInputId) {
+    const wrapper = document.getElementById(wrapperId);
+    const hiddenInput = document.getElementById(hiddenInputId);
+    if (!wrapper || !hiddenInput) return;
+
+    const trigger = wrapper.querySelector(".diary-icon-select-trigger");
+    const emojiEl = wrapper.querySelector(".diary-icon-select-emoji");
+    const labelEl = wrapper.querySelector(".diary-icon-select-label");
+
+    // 드롭다운을 body에 직접 붙여 overflow/backdrop-filter 영향 차단
+    const dropdown = document.createElement("div");
+    dropdown.className = "diary-icon-select-dropdown";
+    dropdown.hidden = true;
+    document.body.appendChild(dropdown);
+
+    options.forEach(({ emoji, label }) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "diary-icon-option";
+        btn.innerHTML = `<span>${emoji}</span><span>${label}</span>`;
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            hiddenInput.value = label;
+            emojiEl.textContent = emoji;
+            labelEl.textContent = label;
+            labelEl.style.color = "#ffffff";
+            dropdown.hidden = true;
+            wrapper.classList.remove("is-open");
+        });
+        dropdown.appendChild(btn);
+    });
+
+    trigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isOpen = !dropdown.hidden;
+        document.querySelectorAll(".diary-icon-select-dropdown").forEach((el) => {
+            el.hidden = true;
+        });
+        document.querySelectorAll(".diary-icon-select.is-open").forEach((el) => {
+            el.classList.remove("is-open");
+        });
+        if (!isOpen) {
+            const rect = trigger.getBoundingClientRect();
+            dropdown.style.top = (rect.bottom + 6) + "px";
+            dropdown.style.left = rect.left + "px";
+            dropdown.style.width = Math.max(rect.width, 260) + "px";
+            dropdown.hidden = false;
+            wrapper.classList.add("is-open");
+        }
+    });
+
+    document.addEventListener("click", () => {
+        dropdown.hidden = true;
+        wrapper.classList.remove("is-open");
+    });
+}
+
+function setIconSelectValue(wrapperId, options, label) {
+    const wrapper = document.getElementById(wrapperId);
+    if (!wrapper) return;
+    const opt = options.find(o => o.label === label);
+    if (!opt) return;
+    wrapper.querySelector(".diary-icon-select-emoji").textContent = opt.emoji;
+    const labelEl = wrapper.querySelector(".diary-icon-select-label");
+    labelEl.textContent = opt.label;
+    labelEl.style.color = "#ffffff";
+    wrapper.querySelector("input[type=hidden]") && (wrapper.querySelector("input[type=hidden]").value = opt.label);
+}
+
+function setIconSelectDisabled(wrapperId, disabled) {
+    const wrapper = document.getElementById(wrapperId);
+    if (!wrapper) return;
+    wrapper.querySelector(".diary-icon-select-trigger").disabled = disabled;
+    wrapper.classList.toggle("is-disabled", disabled);
+}
+
+function initIconSelects() {
+    initIconSelect("emotion-icon-select", EMOTION_OPTIONS, "diary-emotion");
+    initIconSelect("weather-icon-select", WEATHER_OPTIONS, "diary-weather");
+}
+
 function initDiaryDetailPage() {
     const form = document.getElementById("diary-create-form");
     const personaSelect = document.getElementById("diary-persona-select");
@@ -319,6 +424,7 @@ function initDiaryDetailPage() {
         dateInput.value = new Date().toISOString().slice(0, 10);
     }
 
+    initIconSelects();
     if (typeof initCustomSelect === "function") initCustomSelect(personaSelect);
     populatePersonaSelect(personaSelect, "", true);
 
@@ -344,8 +450,8 @@ function setDiaryReadOnly(fields, isReadOnly) {
 
 async function initDiaryReadPage() {
     const dateEl = document.getElementById("diary-read-date");
-    const emotionEl = document.getElementById("diary-read-emotion");
-    const weatherEl = document.getElementById("diary-read-weather");
+    const emotionInput = document.getElementById("diary-read-emotion");
+    const weatherInput = document.getElementById("diary-read-weather");
     const titleEl = document.getElementById("diary-read-title");
     const contentEl = document.getElementById("diary-read-content");
     const editButton = document.getElementById("diary-edit-button");
@@ -353,13 +459,16 @@ async function initDiaryReadPage() {
     const personaSelect = document.getElementById("diary-read-persona-select");
     const rerollSummaryButton = document.getElementById("ai-reroll-summary-button");
 
-    if (!dateEl || !emotionEl || !weatherEl || !titleEl || !contentEl) {
+    if (!dateEl || !emotionInput || !weatherInput || !titleEl || !contentEl) {
         return;
     }
 
     if (typeof initCustomSelect === "function") initCustomSelect(personaSelect);
 
-    const fields = [dateEl, emotionEl, weatherEl, titleEl, contentEl];
+    initIconSelect("emotion-read-icon-select", EMOTION_OPTIONS, "diary-read-emotion");
+    initIconSelect("weather-read-icon-select", WEATHER_OPTIONS, "diary-read-weather");
+
+    const fields = [dateEl, titleEl, contentEl];
     const params = new URLSearchParams(window.location.search);
     const diaryId = params.get("id");
     let isEditing = false;
@@ -372,8 +481,12 @@ async function initDiaryReadPage() {
     try {
         const diary = await fetchDiary(diaryId);
         dateEl.value = diary.diary_date || "";
-        emotionEl.value = diary.emotion || "";
-        weatherEl.value = diary.weather || "";
+        emotionInput.value = diary.emotion || "";
+        weatherInput.value = diary.weather || "";
+        setIconSelectValue("emotion-read-icon-select", EMOTION_OPTIONS, diary.emotion);
+        setIconSelectValue("weather-read-icon-select", WEATHER_OPTIONS, diary.weather);
+        setIconSelectDisabled("emotion-read-icon-select", true);
+        setIconSelectDisabled("weather-read-icon-select", true);
         titleEl.value = diary.title || "";
         contentEl.value = diary.content || "";
 
@@ -462,7 +575,7 @@ async function initDiaryReadPage() {
                         reviewEl.textContent = newFeedback.feedback_text;
                     }
                 } catch (_) {
-                    window.alert("새로운 반응을 가져오지 못했어요. 다시 시도해주세요.");
+                    showAppToast("새로운 반응을 가져오지 못했어요. 다시 시도해주세요.", "error", "오류");
                 } finally {
                     rerollSummaryButton.disabled = false;
                     rerollSummaryButton.textContent = "반응이 마음에 안드시면 여기를 눌러주세요!";
@@ -475,6 +588,8 @@ async function initDiaryReadPage() {
                 if (!isEditing) {
                     isEditing = true;
                     setDiaryReadOnly(fields, false);
+                    setIconSelectDisabled("emotion-read-icon-select", false);
+                    setIconSelectDisabled("weather-read-icon-select", false);
                     if (personaSelect) {
                         personaSelect.disabled = false;
                     }
@@ -484,7 +599,7 @@ async function initDiaryReadPage() {
                 }
 
                 if (!dateEl.value.trim() || !contentEl.value.trim()) {
-                    window.alert("날짜와 일기 내용을 입력해주세요.");
+                    showAppToast("날짜와 일기 내용을 입력해주세요.", "info", "입력 확인");
                     return;
                 }
 
@@ -494,22 +609,26 @@ async function initDiaryReadPage() {
                 try {
                     const updatedDiary = await updateDiary(diaryId, {
                         title: titleEl.value.trim() || null,
-                        emotion: emotionEl.value.trim() || null,
-                        weather: weatherEl.value.trim() || null,
+                        emotion: emotionInput.value.trim() || null,
+                        weather: weatherInput.value.trim() || null,
                         content: contentEl.value.trim(),
                         diary_date: dateEl.value.trim(),
                         persona_id: personaSelect?.value || null,
                     });
 
                     dateEl.value = updatedDiary.diary_date || "";
-                    emotionEl.value = updatedDiary.emotion || "";
-                    weatherEl.value = updatedDiary.weather || "";
+                    emotionInput.value = updatedDiary.emotion || "";
+                    weatherInput.value = updatedDiary.weather || "";
+                    setIconSelectValue("emotion-read-icon-select", EMOTION_OPTIONS, updatedDiary.emotion);
+                    setIconSelectValue("weather-read-icon-select", WEATHER_OPTIONS, updatedDiary.weather);
                     titleEl.value = updatedDiary.title || "";
                     contentEl.value = updatedDiary.content || "";
                     await populatePersonaSelect(personaSelect, updatedDiary.persona_id || "");
 
                     isEditing = false;
                     setDiaryReadOnly(fields, true);
+                    setIconSelectDisabled("emotion-read-icon-select", true);
+                    setIconSelectDisabled("weather-read-icon-select", true);
                     const voiceBtnWrapper = document.getElementById("voice-btn-wrapper");
                     if (voiceBtnWrapper) voiceBtnWrapper.classList.add("hidden");
                     if (personaSelect) {
@@ -554,7 +673,7 @@ async function initDiaryReadPage() {
                     }
 
                 } catch (error) {
-                    window.alert(error.message || "일기 수정에 실패했어요.");
+                    showAppToast(error.message || "일기 수정에 실패했어요.", "error", "수정 실패");
                     editButton.textContent = "저장";
                 } finally {
                     editButton.disabled = false;
@@ -564,17 +683,14 @@ async function initDiaryReadPage() {
 
         if (deleteButton) {
             deleteButton.addEventListener("click", async () => {
-                const isConfirmed = window.confirm("이 일기를 삭제할까요?");
-                if (!isConfirmed) {
-                    return;
-                }
+                if (!await showAppConfirm("이 일기를 삭제할까요?", "일기 삭제")) return;
 
                 try {
                     deleteButton.disabled = true;
                     await deleteDiary(diaryId);
                     window.location.href = "my-diary.html";
                 } catch (error) {
-                    window.alert(error.message || "일기 삭제에 실패했어요.");
+                    showAppToast(error.message || "일기 삭제에 실패했어요.", "error", "삭제 실패");
                     deleteButton.disabled = false;
                 }
             });
