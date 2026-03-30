@@ -10,7 +10,7 @@ class AiFeedback(Base):
     __tablename__ = "ai_feedbacks"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
-    diary_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("diaries.id"), unique=True, nullable=False)  # 일기당 1개
+    diary_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("diaries.id", ondelete="CASCADE"), unique=True, nullable=False)  # 일기당 1개
     persona_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("personas.id"), nullable=False)
     feedback_text: Mapped[str] = mapped_column(Text, nullable=False)
     audio_url: Mapped[str | None] = mapped_column(String(500), nullable=True)

@@ -19,5 +19,5 @@ class DiaryHashtag(Base):
     __tablename__ = "diary_hashtags"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
-    diary_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("diaries.id"), nullable=False)
+    diary_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("diaries.id", ondelete="CASCADE"), nullable=False)
     hashtag_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("hashtags.id"), nullable=False)
