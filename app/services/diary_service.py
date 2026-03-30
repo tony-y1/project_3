@@ -55,8 +55,9 @@ class DiaryService:
         return diary
 
     # ── 목록 조회 (날짜 최신순 + 해시태그 필터 + 날짜 조회 + 커서 페이지네이션) ────
-    # date:   특정 날짜 일기만 조회 (지정 시 before/limit 무시)
-    # before: 이 날짜보다 이전 일기만 조회 (커서 역할, 없으면 최신부터)
+    # date:   특정 날짜 일기만 조회 (지정 시 after/before/limit 무시)
+    # after:  이 날짜 이후 일기만 조회 (캘린더 월별 조회 시 월 시작일)
+    # before: 이 날짜보다 이전 일기만 조회 (커서 or 캘린더 월별 조회 시 다음달 1일)
     # limit:  한 번에 반환할 최대 개수 (기본 20개 → 데스크탑 기준 약 15권 표시)
     async def get_diaries(
         self,
@@ -64,6 +65,7 @@ class DiaryService:
         user_id: uuid.UUID,
         tag: str | None = None,
         date: date | None = None,
+        after: date | None = None,
         before: date | None = None,
         limit: int = 20,
     ) -> list[Diary]:
@@ -79,13 +81,15 @@ class DiaryService:
                 .join(Hashtag, DiaryHashtag.hashtag_id == Hashtag.id)
                 .where(Hashtag.name == tag)
             )
-        # 특정 날짜 조회: 해당 날짜 일기만 반환 (before/limit 적용 안 함)
+        # 특정 날짜 조회: 해당 날짜 일기만 반환 (after/before/limit 적용 안 함)
         if date:
             stmt = stmt.where(Diary.diary_date == date)
             result = await db.execute(stmt)
             return result.scalars().all()
 
-        # 커서: 이전 배치의 마지막 diary_date보다 오래된 일기부터 조회
+        # 날짜 범위: after/before 조합으로 월별 조회 등에 사용
+        if after:
+            stmt = stmt.where(Diary.diary_date >= after)
         if before:
             stmt = stmt.where(Diary.diary_date < before)
 

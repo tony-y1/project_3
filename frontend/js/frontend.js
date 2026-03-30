@@ -449,7 +449,9 @@ async function DiarySearch() {
    profile.html
 ========================= */
 let profileCalendarDate = new Date();
-let profileDiaryDates = new Set();
+// Map<날짜문자열, [{id, title}]> — 날짜별 일기 목록 저장
+// Set.has()와 동일하게 Map.has()로 날짜 존재 여부 확인 가능
+let profileDiaryDates = new Map();
 const PROFILE_ALARM_STORAGE_KEY = "profile_alarm_settings";
 
 function formatProfileDateKey(date) {
@@ -556,8 +558,63 @@ function renderProfileCalendar() {
             ${badge}
         `;
 
+        // 일기 있는 날: 내부 사각형(.profile-calendar-mark)에만 클릭 이벤트 적용
+        // 셀 전체가 아닌 mark 위에서만 커서/클릭 동작 → 작성하기 링크와 동일한 방식
+        if (hasDiary) {
+            const mark = cell.querySelector(".profile-calendar-mark");
+            if (mark) {
+                mark.addEventListener("click", () => {
+                    const entries = profileDiaryDates.get(key);
+                    if (!entries || !entries.length) return;
+
+                    if (entries.length === 1) {
+                        window.location.href = `diary_read.html?id=${encodeURIComponent(entries[0].id)}`;
+                        return;
+                    }
+
+                    showDiaryPickerPopup(key, entries);
+                });
+            }
+        }
+
         grid.appendChild(cell);
     }
+}
+
+// 같은 날짜에 일기가 여러 개일 때 제목 선택 팝업
+function showDiaryPickerPopup(dateKey, entries) {
+    // 기존 팝업 제거
+    const existing = document.getElementById("diary-picker-popup");
+    if (existing) existing.remove();
+
+    const popup = document.createElement("div");
+    popup.id = "diary-picker-popup";
+    popup.className = "diary-picker-popup";
+    popup.innerHTML = `
+        <div class="diary-picker-popup-inner">
+            <div class="diary-picker-popup-header">
+                <span>${dateKey} 일기 목록</span>
+                <button type="button" class="diary-picker-popup-close">✕</button>
+            </div>
+            <ul class="diary-picker-popup-list">
+                ${entries.map(({ id, title }) => `
+                    <li>
+                        <a href="diary_read.html?id=${encodeURIComponent(id)}" class="diary-picker-popup-item">
+                            ${escapeHtml(title)}
+                        </a>
+                    </li>
+                `).join("")}
+            </ul>
+        </div>
+    `;
+
+    // 배경 클릭 시 닫기
+    popup.addEventListener("click", (e) => {
+        if (e.target === popup) popup.remove();
+    });
+    popup.querySelector(".diary-picker-popup-close").addEventListener("click", () => popup.remove());
+
+    document.body.appendChild(popup);
 }
 
 function initProfileAlarmPage() {
@@ -655,13 +712,45 @@ function initProfileCalendarControls() {
 
     yearSelect.addEventListener("change", () => {
         profileCalendarDate = new Date(Number(yearSelect.value), profileCalendarDate.getMonth(), 1);
-        renderProfileCalendar();
+        fetchAndRenderCalendar(profileCalendarDate.getFullYear(), profileCalendarDate.getMonth() + 1);
     });
 
     monthSelect.addEventListener("change", () => {
         profileCalendarDate = new Date(profileCalendarDate.getFullYear(), Number(monthSelect.value) - 1, 1);
-        renderProfileCalendar();
+        fetchAndRenderCalendar(profileCalendarDate.getFullYear(), profileCalendarDate.getMonth() + 1);
     });
+}
+
+// 특정 연/월의 일기를 불러와 profileDiaryDates(Map)에 저장 후 캘린더 재렌더링
+async function fetchAndRenderCalendar(year, month) {
+    // after: 해당 월 1일, before: 다음 달 1일 → 월별 범위 조회
+    const after  = `${year}-${String(month).padStart(2, "0")}-01`;
+    const nextMonth = month === 12 ? 1 : month + 1;
+    const nextYear  = month === 12 ? year + 1 : year;
+    const before = `${nextYear}-${String(nextMonth).padStart(2, "0")}-01`;
+
+    try {
+        const diaries = await apiRequest(
+            `/diaries/?after=${after}&before=${before}&limit=31`,
+            { method: "GET" }
+        );
+        // 날짜별로 그룹핑: Map<날짜문자열, [{id, title}]>
+        profileDiaryDates = new Map();
+        diaries.forEach((diary) => {
+            if (!diary.diary_date) return;
+            if (!profileDiaryDates.has(diary.diary_date)) {
+                profileDiaryDates.set(diary.diary_date, []);
+            }
+            profileDiaryDates.get(diary.diary_date).push({
+                id: diary.id,
+                title: diary.title || diary.diary_date,
+            });
+        });
+    } catch (_error) {
+        profileDiaryDates = new Map();
+    }
+
+    renderProfileCalendar();
 }
 
 async function initProfilePage() {
@@ -678,18 +767,9 @@ async function initProfilePage() {
     profileCalendarDate.setDate(1);
     initProfileCalendarControls();
 
-    try {
-        const diaries = await apiRequest("/diaries/", { method: "GET" });
-        profileDiaryDates = new Set(
-            diaries
-                .map((diary) => diary.diary_date)
-                .filter(Boolean)
-        );
-    } catch (_error) {
-        profileDiaryDates = new Set();
-    }
-
-    renderProfileCalendar();
+    const year  = profileCalendarDate.getFullYear();
+    const month = profileCalendarDate.getMonth() + 1;
+    await fetchAndRenderCalendar(year, month);
 }
 
 function fillNickname() {
