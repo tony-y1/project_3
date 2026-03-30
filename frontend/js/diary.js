@@ -49,8 +49,9 @@ function createDiaryCard(diary) {
     return book;
 }
 
-async function fetchDiaries() {
-    return apiRequest("/diaries/", { method: "GET" });
+async function fetchDiaries(tag = null) {
+    const url = tag ? `/diaries/?tag=${encodeURIComponent(tag)}` : "/diaries/";
+    return apiRequest(url, { method: "GET" });
 }
 
 async function fetchPersonas() {
@@ -170,18 +171,33 @@ async function populatePersonaSelect(selectElement, selectedPersonaId = "", useA
     }
 }
 
-async function renderDiaryShelfFromApi() {
+async function renderDiaryShelfFromApi(tag = null) {
     const shelf = document.getElementById("diary-shelf");
     if (!shelf) {
         return;
     }
 
-    try {
-        const diaries = await fetchDiaries();
-        shelf.innerHTML = "";
+    // 태그 필터 배너 표시
+    const banner = document.getElementById("tag-filter-banner");
+    const label = document.getElementById("tag-filter-label");
+    if (banner && label) {
+        if (tag) {
+            label.textContent = `#${tag}`;
+            banner.classList.remove("hidden");
+        } else {
+            banner.classList.add("hidden");
+        }
+    }
 
+    try {
+        const diaries = await fetchDiaries(tag);
+        shelf.innerHTML = "";
         if (!diaries.length) {
-            shelf.innerHTML = `
+            shelf.innerHTML = tag ? `
+                <div class="diary-empty-book" id="diary-empty-state">
+                    #${escapeHtml(tag)} 태그의 일기가 없어요.
+                </div>
+            ` : `
                 <div class="diary-empty-book" id="diary-empty-state">
                     아직 저장된 일기가 없어요.<br>
                     첫 번째 일기를 작성해보세요.
@@ -192,7 +208,6 @@ async function renderDiaryShelfFromApi() {
                 shelf.appendChild(createDiaryCard(diary));
             });
         }
-
         diaryShelfIndex = 0;
         updateDiaryShelfPosition();
         renderDiaryProgress();
@@ -263,8 +278,14 @@ function initDiaryListPage() {
     if (!shelf) {
         return;
     }
+    // URL에서 태그 파라미터 읽기
+    const params = new URLSearchParams(window.location.search);
+    const tag = params.get("tag");
+    renderDiaryShelfFromApi(tag);
+}
 
-    renderDiaryShelfFromApi();
+function clearTagFilter() {
+    window.location.href = "my-diary.html";
 }
 
 const EMOTION_OPTIONS = [
