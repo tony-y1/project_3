@@ -248,6 +248,12 @@ html, body {
     border-color: rgba(255, 255, 255, 0.25);
 }
 
+.profile-calendar-cell.has-diary:hover .profile-calendar-mark {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.55);
+    color: #ffffff;
+}
+
 .profile-calendar-day {
     font-size: 18px;
     font-weight: 600;
@@ -278,6 +284,8 @@ html, body {
     font-size: 11px;
     letter-spacing: 0.08em;
     margin-top: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .profile-calendar-mark i {
@@ -1451,6 +1459,69 @@ html, body {
     color: rgba(255, 255, 255, 0.8);
     line-height: 1.8;
     min-height: 76px;
+}
+
+/* ── 날짜별 일기 선택 팝업 (같은 날 여러 편일 때) ── */
+.diary-picker-popup {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+}
+
+.diary-picker-popup-inner {
+    background: #10101e;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    width: min(100%, 360px);
+    overflow: hidden;
+}
+
+.diary-picker-popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+}
+
+.diary-picker-popup-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0;
+    line-height: 1;
+}
+
+.diary-picker-popup-close:hover { color: #fff; }
+
+.diary-picker-popup-list {
+    list-style: none;
+    margin: 0;
+    padding: 8px 0;
+}
+
+.diary-picker-popup-item {
+    display: block;
+    padding: 14px 20px;
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    font-size: 15px;
+    transition: background 0.15s;
+}
+
+.diary-picker-popup-item:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: #fff;
 }
 
 .voice-btn-modal {

@@ -112,7 +112,12 @@
                         <button type="button" class="diary-nav-btn" onclick="moveDiaryShelf(1)">›</button>
                     </div>
                 </div>
-
+                <!-- 해시태그 필터 표시 영역 -->
+                <div id="tag-filter-banner" class="hidden mb-4 flex items-center gap-3">
+                    <span class="text-white/70 text-sm">태그 필터:</span>
+                    <span id="tag-filter-label" class="px-3 py-1 rounded-full text-sm text-white border border-white/40 bg-white/10"></span>
+                    <button type="button" onclick="clearTagFilter()" class="text-white/50 hover:text-white text-sm underline">전체 보기</button>
+                </div>
                 <div class="diary-shelf-wrapper">
                     <div class="diary-floor-line"></div>
 

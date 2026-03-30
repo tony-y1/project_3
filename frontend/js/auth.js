@@ -193,8 +193,18 @@ async function handleLoginSubmit(event) {
         const result = await login(username, password);
         saveAuth(result.access_token, result.user);
         setMessage(message, "로그인 성공! 이동 중...", false);
-        window.setTimeout(() => {
-            window.location.href = "profile.html";
+
+        // custom 페르소나 없으면 온보딩으로, 있으면 프로필로
+        // GET /personas/는 기본 preset 3개를 자동 생성하므로 length가 아닌
+        // custom 타입 존재 여부로 온보딩 완료 여부를 판단
+        window.setTimeout(async () => {
+            try {
+                const personas = await apiRequest("/personas/", { method: "GET" });
+                const hasOnboarded = personas.some(p => p.preset_type === "custom");
+                window.location.href = hasOnboarded ? "profile.html" : "persona-onboarding.html";
+            } catch (_) {
+                window.location.href = "profile.html";
+            }
         }, 500);
     } catch (error) {
         // api.js의 수정 덕분에 여기로 무사히 넘어와서 빨간색 에러 메시지를 띄우게 됩니다.

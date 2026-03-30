@@ -84,6 +84,41 @@ class GPTService:
 
         logger.info(f"GPT 스트리밍 완료: 총 {time.time() - t_start:.2f}s")
 
+    async def generate_persona_description(self, answers: dict) -> str:
+        """온보딩 Q&A 답변으로 custom 페르소나 설명 한 문단 생성"""
+        qa_text = "\n".join([
+            f"- 호칭: {answers.get('nickname', '')}",
+            f"- 하루 페이스: {answers.get('pace', '')}",
+            f"- 일기 쓰는 이유: {answers.get('reason', '')}",
+            f"- 원하는 말벗 스타일: {answers.get('style', '')}",
+            f"- 기억해줬으면 하는 것: {answers.get('memory', '없음')}",
+        ])
+        try:
+            response = await client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "당신은 사용자의 일기를 들어주는 AI 말벗 캐릭터를 설계하는 전문가입니다.\n"
+                            "아래 사용자의 답변을 바탕으로 말벗 캐릭터의 성격과 태도를 한 문단(3~4문장)으로 묘사해주세요.\n"
+                            "반드시 한국어로 작성하고, '~해요' 체의 부드러운 존댓말로만 써주세요. 반말을 절대 섞지 마세요.\n"
+                            "묘사는 반드시 '이 말벗은'으로 시작하고, 말벗이 어떤 성격과 태도로 사용자의 일기에 반응하는지 설명해주세요.\n"
+                            "호칭은 말벗이 사용자를 부르는 표현입니다. 문단에서 호칭을 주어나 이름으로 쓰지 마세요. "
+                            "예를 들어 호칭이 '언니'라면, '이 말벗은 언니를 따뜻하게 맞아줄 거야'처럼 목적어로만 쓰거나 아예 생략해도 됩니다.\n"
+                            "마지막 문장은 반드시 말투를 명시해주세요: 친구형·공감형이면 '이 말벗은 앞으로 반말로 이야기해요.'로, "
+                            "조언형·탐구형이면 '이 말벗은 앞으로 존댓말로 이야기해요.'로 끝내주세요."
+                        ),
+                    },
+                    {"role": "user", "content": qa_text},
+                ],
+                max_tokens=200,
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            logger.error(f"페르소나 생성 오류: {e}")
+            raise HTTPException(status_code=503, detail="AI 서비스에 문제가 발생했어요.")
+
     async def generate_hashtags(self, diary_content: str) -> list[str]:
         """일기 내용에서 해시태그 자동 생성"""
         try:

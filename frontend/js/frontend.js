@@ -230,53 +230,54 @@ function closeSearchModal() {
     modal.classList.add("hidden");
 }
 
-function saveDiaryEntry() {
-    const dateInput = document.getElementById("diary-date");
-    const titleInput = document.getElementById("diary-title");
-    const contentInput = document.getElementById("diary-content");
-    const shelf = document.getElementById("diary-shelf");
-    const emptyState = document.getElementById("diary-empty-state");
+// 미사용 코드 주석
+// function saveDiaryEntry() {
+//     const dateInput = document.getElementById("diary-date");
+//     const titleInput = document.getElementById("diary-title");
+//     const contentInput = document.getElementById("diary-content");
+//     const shelf = document.getElementById("diary-shelf");
+//     const emptyState = document.getElementById("diary-empty-state");
 
-    if (!dateInput || !titleInput || !contentInput || !shelf) return;
+//     if (!dateInput || !titleInput || !contentInput || !shelf) return;
 
-    const date = dateInput.value.trim();
-    const title = titleInput.value.trim();
-    const content = contentInput.value.trim();
+//     const date = dateInput.value.trim();
+//     const title = titleInput.value.trim();
+//     const content = contentInput.value.trim();
 
-    if (!date || !title || !content) {
-        showAppToast("날짜, 제목, 일기 내용을 모두 입력해주세요.", "info", "입력 확인");
-        return;
-    }
+//     if (!date || !title || !content) {
+//         showAppToast("날짜, 제목, 일기 내용을 모두 입력해주세요.", "info", "입력 확인");
+//         return;
+//     }
 
-    if (emptyState) {
-        emptyState.remove();
-    }
+//     if (emptyState) {
+//         emptyState.remove();
+//     }
 
-    const book = document.createElement("div");
-    book.className = "diary-book";
+//     const book = document.createElement("div");
+//     book.className = "diary-book";
 
-    book.innerHTML = `
-        <div class="diary-book-inner">
-            <div class="diary-book-date">${escapeHtml(formatDiaryDate(date))}</div>
-            <div class="diary-book-title">${escapeHtml(title)}</div>
+//     book.innerHTML = `
+//         <div class="diary-book-inner">
+//             <div class="diary-book-date">${escapeHtml(formatDiaryDate(date))}</div>
+//             <div class="diary-book-title">${escapeHtml(title)}</div>
 
-            <div class="diary-book-footer">
-                <button type="button" class="diary-book-delete" onclick="deleteDiaryBook(this)">삭제</button>
-            </div>
-        </div>
-    `;
+//             <div class="diary-book-footer">
+//                 <button type="button" class="diary-book-delete" onclick="deleteDiaryBook(this)">삭제</button>
+//             </div>
+//         </div>
+//     `;
 
-    shelf.prepend(book);
+//     shelf.prepend(book);
 
-    dateInput.value = "";
-    titleInput.value = "";
-    contentInput.value = "";
+//     dateInput.value = "";
+//     titleInput.value = "";
+//     contentInput.value = "";
 
-    diaryShelfIndex = 0;
-    updateDiaryShelfPosition();
-    renderDiaryProgress();
-    closeDiaryModal();
-}
+//     diaryShelfIndex = 0;
+//     updateDiaryShelfPosition();
+//     renderDiaryProgress();
+//     closeDiaryModal();
+// }
 
 async function deleteDiaryBook(button) {
     const isConfirmed = await showAppConfirm("삭제하시겠습니까?", "일기 삭제");
@@ -324,6 +325,20 @@ function moveDiaryShelf(direction) {
     if (diaryShelfIndex < 0) diaryShelfIndex = 0;
     if (diaryShelfIndex > maxIndex) diaryShelfIndex = maxIndex;
 
+    // 화면에 보이는 마지막 책이 전체 끝에 닿으면 다음 배치 요청
+    // diaryShelfIndex = 왼쪽 끝 책 번호(step=책 너비라서)
+    // diaryShelfIndex + 한 화면에 보이는 책 수 >= maxIndex 이면 끝 도달
+    if (typeof loadMoreDiaries === "function") {
+        const isMobile = window.innerWidth <= 768;
+        const bookWidth = isMobile ? 50 : 75;
+        const wrapperWidth = document.querySelector(".diary-shelf-wrapper")?.offsetWidth || window.innerWidth;
+        const visibleCount = Math.floor(wrapperWidth / bookWidth);
+
+        if (diaryShelfIndex + visibleCount >= maxIndex) {
+            loadMoreDiaries().then(() => renderDiaryProgress());
+        }
+    }
+
     updateDiaryShelfPosition();
     renderDiaryProgress();
 }
@@ -333,7 +348,10 @@ function updateDiaryShelfPosition() {
     if (!shelf) return;
 
     const isMobile = window.innerWidth <= 768;
-    const step = isMobile ? 90 : 106;
+    // 책 1권 단위로 이동:
+    // 데스크탑(72px + gap 3px = 75px)
+    // 모바일(48px + gap 2px = 50px)
+    const step = isMobile ? 50 : 75;
     const offset = diaryShelfIndex * step;
 
     shelf.style.transform = `translateX(-${offset}px)`;
@@ -431,7 +449,9 @@ async function DiarySearch() {
    profile.html
 ========================= */
 let profileCalendarDate = new Date();
-let profileDiaryDates = new Set();
+// Map<날짜문자열, [{id, title}]> — 날짜별 일기 목록 저장
+// Set.has()와 동일하게 Map.has()로 날짜 존재 여부 확인 가능
+let profileDiaryDates = new Map();
 const PROFILE_ALARM_STORAGE_KEY = "profile_alarm_settings";
 
 function formatProfileDateKey(date) {
@@ -538,8 +558,63 @@ function renderProfileCalendar() {
             ${badge}
         `;
 
+        // 일기 있는 날: 내부 사각형(.profile-calendar-mark)에만 클릭 이벤트 적용
+        // 셀 전체가 아닌 mark 위에서만 커서/클릭 동작 → 작성하기 링크와 동일한 방식
+        if (hasDiary) {
+            const mark = cell.querySelector(".profile-calendar-mark");
+            if (mark) {
+                mark.addEventListener("click", () => {
+                    const entries = profileDiaryDates.get(key);
+                    if (!entries || !entries.length) return;
+
+                    if (entries.length === 1) {
+                        window.location.href = `diary_read.html?id=${encodeURIComponent(entries[0].id)}`;
+                        return;
+                    }
+
+                    showDiaryPickerPopup(key, entries);
+                });
+            }
+        }
+
         grid.appendChild(cell);
     }
+}
+
+// 같은 날짜에 일기가 여러 개일 때 제목 선택 팝업
+function showDiaryPickerPopup(dateKey, entries) {
+    // 기존 팝업 제거
+    const existing = document.getElementById("diary-picker-popup");
+    if (existing) existing.remove();
+
+    const popup = document.createElement("div");
+    popup.id = "diary-picker-popup";
+    popup.className = "diary-picker-popup";
+    popup.innerHTML = `
+        <div class="diary-picker-popup-inner">
+            <div class="diary-picker-popup-header">
+                <span>${dateKey} 일기 목록</span>
+                <button type="button" class="diary-picker-popup-close">✕</button>
+            </div>
+            <ul class="diary-picker-popup-list">
+                ${entries.map(({ id, title }) => `
+                    <li>
+                        <a href="diary_read.html?id=${encodeURIComponent(id)}" class="diary-picker-popup-item">
+                            ${escapeHtml(title)}
+                        </a>
+                    </li>
+                `).join("")}
+            </ul>
+        </div>
+    `;
+
+    // 배경 클릭 시 닫기
+    popup.addEventListener("click", (e) => {
+        if (e.target === popup) popup.remove();
+    });
+    popup.querySelector(".diary-picker-popup-close").addEventListener("click", () => popup.remove());
+
+    document.body.appendChild(popup);
 }
 
 function initProfileAlarmPage() {
@@ -637,13 +712,45 @@ function initProfileCalendarControls() {
 
     yearSelect.addEventListener("change", () => {
         profileCalendarDate = new Date(Number(yearSelect.value), profileCalendarDate.getMonth(), 1);
-        renderProfileCalendar();
+        fetchAndRenderCalendar(profileCalendarDate.getFullYear(), profileCalendarDate.getMonth() + 1);
     });
 
     monthSelect.addEventListener("change", () => {
         profileCalendarDate = new Date(profileCalendarDate.getFullYear(), Number(monthSelect.value) - 1, 1);
-        renderProfileCalendar();
+        fetchAndRenderCalendar(profileCalendarDate.getFullYear(), profileCalendarDate.getMonth() + 1);
     });
+}
+
+// 특정 연/월의 일기를 불러와 profileDiaryDates(Map)에 저장 후 캘린더 재렌더링
+async function fetchAndRenderCalendar(year, month) {
+    // after: 해당 월 1일, before: 다음 달 1일 → 월별 범위 조회
+    const after  = `${year}-${String(month).padStart(2, "0")}-01`;
+    const nextMonth = month === 12 ? 1 : month + 1;
+    const nextYear  = month === 12 ? year + 1 : year;
+    const before = `${nextYear}-${String(nextMonth).padStart(2, "0")}-01`;
+
+    try {
+        const diaries = await apiRequest(
+            `/diaries/?after=${after}&before=${before}&limit=31`,
+            { method: "GET" }
+        );
+        // 날짜별로 그룹핑: Map<날짜문자열, [{id, title}]>
+        profileDiaryDates = new Map();
+        diaries.forEach((diary) => {
+            if (!diary.diary_date) return;
+            if (!profileDiaryDates.has(diary.diary_date)) {
+                profileDiaryDates.set(diary.diary_date, []);
+            }
+            profileDiaryDates.get(diary.diary_date).push({
+                id: diary.id,
+                title: diary.title || diary.diary_date,
+            });
+        });
+    } catch (_error) {
+        profileDiaryDates = new Map();
+    }
+
+    renderProfileCalendar();
 }
 
 async function initProfilePage() {
@@ -660,18 +767,9 @@ async function initProfilePage() {
     profileCalendarDate.setDate(1);
     initProfileCalendarControls();
 
-    try {
-        const diaries = await apiRequest("/diaries/", { method: "GET" });
-        profileDiaryDates = new Set(
-            diaries
-                .map((diary) => diary.diary_date)
-                .filter(Boolean)
-        );
-    } catch (_error) {
-        profileDiaryDates = new Set();
-    }
-
-    renderProfileCalendar();
+    const year  = profileCalendarDate.getFullYear();
+    const month = profileCalendarDate.getMonth() + 1;
+    await fetchAndRenderCalendar(year, month);
 }
 
 function fillNickname() {

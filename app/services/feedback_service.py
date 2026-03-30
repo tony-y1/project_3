@@ -36,7 +36,14 @@ def build_system_prompt(persona_name: str, preset_type: str | None, custom_descr
     if preset_type and preset_type in PERSONA_PROMPTS:
         base = PERSONA_PROMPTS[preset_type]
     elif custom_description:
-        base = f"당신은 {custom_description} 성격의 말벗입니다. 2~3문장으로 짧게 답하세요."
+        # 페르소나 설명에서 말투 감지 후 강제 적용
+        if "반말로 이야기해요" in custom_description:
+            speech_rule = "반드시 반말로만 대화하세요. 존댓말을 절대 섞지 마세요."
+        elif "존댓말로 이야기해요" in custom_description:
+            speech_rule = "반드시 존댓말로만 대화하세요. 반말을 절대 섞지 마세요."
+        else:
+            speech_rule = "반말 또는 존댓말 중 하나를 선택해 일관되게 사용하세요. 절대 섞지 마세요."
+        base = f"당신은 {custom_description} 성격의 말벗입니다. {speech_rule} 2~3문장으로 짧게 답하세요."
     else:
         base = DEFAULT_PROMPT
     return f"당신의 이름은 '{persona_name}'입니다. " + base
