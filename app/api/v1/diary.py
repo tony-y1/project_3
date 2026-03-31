@@ -1,10 +1,11 @@
 # 담당 : A팀원 유가영
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import date
+import time
 import uuid
 
-from app.database import get_db
+from app.database import get_db, AsyncSessionLocal
 from app.schemas.diary import DiaryCreate, DiaryUpdate, DiaryResponse
 from app.services.diary_service import DiaryService
 from app.services.feedback_service import FeedbackService
@@ -17,6 +18,21 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 diary_svc = DiaryService()
 feedback_svc = FeedbackService()
+
+# 백그라운드에서 일기 요약 생성 (독립 DB 세션 사용)
+async def _bg_create_summary(diary_id: uuid.UUID, content: str, diary_date, user_id: uuid.UUID):
+    t = time.time()
+    try:
+        async with AsyncSessionLocal() as db:
+            from app.models.diary import Diary
+            from sqlalchemy import select as sa_select
+            result = await db.execute(sa_select(Diary).where(Diary.id == diary_id))
+            diary = result.scalar_one_or_none()
+            if diary:
+                await diary_svc.create_summary(db, diary)
+                logger.info("요약 생성(BG): %.2fs [diary_id=%s]", time.time() - t, diary_id)
+    except Exception as e:
+        logger.error("요약 생성(BG) 실패 [diary_id=%s]: %s", diary_id, e)
 
 
 # ── GET /diaries ─ 목록 조회 ────────────────────
@@ -41,12 +57,15 @@ async def list_diaries(
 @router.post("/", response_model=DiaryResponse, status_code=201)
 async def create_diary(
     body: DiaryCreate,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    t_start = time.time()
     diary = await diary_svc.create_diary(db, current_user.id, body)
 
-    # 일기 생성 후 AI 피드백 자동 생성 (백그라운드)
+    # 일기 생성 후 AI 피드백 자동 생성 (blocking - read.html에서 즉시 필요)
+    t_feedback = time.time()
     try:
         from app.models.persona import Persona
         from sqlalchemy import select as sa_select
@@ -65,25 +84,26 @@ async def create_diary(
             preset_type=persona.preset_type if persona else "empathy",
             custom_description=persona.custom_description if persona else None,
         )
-    
     except Exception:
         pass  # 피드백 실패해도 일기 생성은 성공으로 처리
+    logger.info("피드백 생성: %.2fs", time.time() - t_feedback)
 
-    # 일기 요약 생성 (메모리 컨텍스트 및 검색용)
-    try:
-        await diary_svc.create_summary(db, diary)
-    except Exception:
-        pass  # 요약 실패해도 일기 생성은 성공으로 처리
-    
-   # 해시태그 자동 생성
+    # 일기 요약 생성 → 백그라운드 (응답 반환 후 처리)
+    background_tasks.add_task(
+        _bg_create_summary,
+        diary.id, diary.content, diary.diary_date, current_user.id,
+    )
+
+    # 해시태그 자동 생성
     try:
         from app.services.gpt_service import gpt_service
         hashtags = await gpt_service.generate_hashtags(diary.content)
         if hashtags:
             await diary_svc.add_hashtags(db, diary.id, current_user.id, hashtags)
     except Exception as e:
-        logger.error(f"해시태그 생성 실패: {e}")  # 에러 출력으로 변경
-    
+        logger.error(f"해시태그 생성 실패: {e}")
+
+    logger.info("일기 저장 총 소요(응답 기준): %.2fs", time.time() - t_start)
     return diary
 
 # ── GET /diaries/{diary_id} ─ 단건 조회 ─────────

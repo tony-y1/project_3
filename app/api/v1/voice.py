@@ -75,6 +75,25 @@ async def text_to_speech(request: TTSRequest, current_user=Depends(get_current_u
     )
 
 # ── TTS Stream: GPT 스트리밍 → TTS 파이프라인 ────────────
+# [미사용 엔드포인트]
+# 설계 의도: 일기 저장 시 GPT 피드백을 스트리밍으로 받으면서 문장 단위로 즉시 TTS 변환,
+#            오디오를 끊김 없이 전달해 재생 대기 시간을 줄이는 것이 목표였음.
+#
+# 미사용 이유:
+# 1. 피드백은 일기 저장(POST /diaries) 시 DB에 저장되고, read.html로 리다이렉트 후 조회함.
+#    즉 사용자가 재생 버튼을 누르는 시점에는 이미 GPT 호출이 완료된 상태라
+#    GPT 스트리밍을 다시 호출하는 것은 중복 비용 발생.
+# 2. 프론트에서 스트리밍 오디오 청크를 순서대로 이어 붙여 재생하려면
+#    MediaSource Extensions(MSE) 구현이 필요한데, MP3 포맷은 MSE 처리가 복잡함.
+#
+# 검토했던 개선안들:
+# - create_feedback 스트리밍 전환: GPT 응답을 끝까지 받아야 TTS도 완료되므로 총 생성 시간 절감 없음.
+# - 백그라운드 TTS 프리캐싱: 피드백 생성 후 BG에서 TTS를 Redis에 캐싱하는 방식 구현 및 테스트.
+#   오토플레이(페이지 로드 즉시 재생) 시나리오에서는 BG 완료 전에 재생이 호출되어 캐시 미스 발생.
+#   수동 재생(피드백 읽고 클릭)에서만 효과가 있어 범용적이지 않아 원복함.
+#
+# 향후 개선 방향:
+#   TTS 모델/서비스 교체(Azure TTS 등 저지연 서비스)로 생성 시간 자체를 줄이는 것이 근본 해결책.
 @router.post("/tts/stream")
 async def stream_feedback_tts(request: StreamFeedbackRequest, current_user=Depends(get_current_user)):
     if not request.diary_content.strip():

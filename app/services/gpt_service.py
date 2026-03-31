@@ -137,9 +137,11 @@ class GPTService:
                             "- 소재: 언급된 사물이나 주제 (예: 고양이, 날씨, 다이어트)\n\n"
                             "규칙:\n"
                             "1. 각 카테고리에서 1~2개, 총 5~7개 추출\n"
-                            "2. 한국어, 2~5글자 단어\n"
+                            "2. 한국어 또는 영문 단어 (브랜드명·상품명 포함)\n"
                             "3. # 없이 단어만, 쉼표로 구분\n"
                             "4. 일기에 없는 내용은 만들지 말 것\n"
+                            "5. 나, 저, 그, 이, 저, 우리, 그것, 이것 등 대상 지칭어는 제외할 것\n"
+                            "6. 추출할 키워드가 전혀 없을 때만 '없음' 한 단어만 답할 것. 키워드가 있으면 절대 '없음'을 섞지 말 것\n"
                             "예시) 뿌듯함, 야근, 회사, 상사, 치킨, 퇴근길"
                         ),
                     },
@@ -148,13 +150,10 @@ class GPTService:
                 max_tokens=150,
             )
             result = response.choices[0].message.content.strip()
-            hashtags = [tag.strip() for tag in result.split(",") if tag.strip()]
-            valid_hashtags = [
-                tag for tag in hashtags
-                if tag and len(tag) <= 10
-                and not any(kw in tag for kw in ["죄송", "죄송합니다", "제공", "이해", "어렵", "내용"])
-            ]
-            return valid_hashtags[:7]
+            if result == "없음":
+                return []
+            hashtags = [tag.strip() for tag in result.split(",") if tag.strip() and tag.strip() != "없음"]
+            return hashtags[:7]
         except Exception as e:
             logger.error(f"해시태그 생성 오류: {e}")
             return []
