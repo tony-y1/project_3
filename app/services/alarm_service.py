@@ -85,8 +85,8 @@ async def trigger_alarm(db: AsyncSession, alarm: Alarm):
     if sub:
         try:
             payload = json.dumps({
-                "title": "말벗 알람",
-                "body": f"설정한 알람 시간입니다. ({alarm.alarm_time})"
+                "title": "하루.commit()",
+                "body": "Write Down Your Day.\n지정하신 알람 시간이에요.({alarm.alarm_time})\n잊기 전에 오늘 하루를 기록해보세요."
             })
 
             webpush(
