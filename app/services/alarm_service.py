@@ -86,7 +86,7 @@ async def trigger_alarm(db: AsyncSession, alarm: Alarm):
         try:
             payload = json.dumps({
                 "title": "하루.commit()",
-                "body": "Write Down Your Day.\n지정하신 알람 시간이에요.({alarm.alarm_time})\n잊기 전에 오늘 하루를 기록해보세요."
+                "body": f"지정하신 알람 시간이에요.({str(alarm.alarm_time)[:5]})\n잊기 전에 오늘 하루를 기록해보세요."
             })
 
             webpush(
